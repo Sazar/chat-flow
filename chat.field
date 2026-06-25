@@ -22,7 +22,7 @@
   },
   "showEventKind": {
     "type": "checkbox",
-    "label": "Show event type badge (SUB / RAID / ...)",
+    "label": "Petit badge event",
     "value": true
   },
   "nameBg": {

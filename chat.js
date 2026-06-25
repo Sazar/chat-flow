@@ -203,8 +203,13 @@ function createEventEl(name, kind, desc) {
   topline.appendChild(nameSpan);
   topline.appendChild(descSpan);
 
-  /* Pilule kind : uniquement si showEventKind est coche */
-  if (fd.showEventKind !== false) {
+  /*
+    fd est toujours a jour au moment du rendu (onEventReceived arrive apres onWidgetLoad).
+    On lit fd.showEventKind ici, au moment de la creation de l'element.
+    La valeur par defaut est true : on affiche le badge sauf si explicitement false.
+  */
+  var showKind = (fd.showEventKind === undefined) ? true : (fd.showEventKind === true);
+  if (showKind) {
     var kindSpan = document.createElement('span');
     kindSpan.className = 'ev-kind';
     kindSpan.textContent = kind;
