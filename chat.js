@@ -8,8 +8,14 @@ function esc(s){
   }[m]));
 }
 
+/*
+  resolveNameColor :
+  - useTwitchColor COCHE  + couleur Twitch dispo => couleur Twitch
+  - useTwitchColor DECOCHE ou pas de couleur Twitch => fd.nameText
+  fd.nameText est toujours le fallback final.
+*/
 function resolveNameColor(twitchColor) {
-  if (fd.useTwitchColor && twitchColor) return twitchColor;
+  if (fd.useTwitchColor === true && twitchColor) return twitchColor;
   return fd.nameText || 'inherit';
 }
 
@@ -185,16 +191,6 @@ var EVENT_ICONS = {
 };
 
 /* ---- CREATION ELEMENT EVENT (une seule barre) ---- */
-/*
-  Structure :
-  <div class="item event">
-    <div class="topline">
-      <span class="ev-icon">emoji</span>
-      <span class="ev-name">Pseudo</span>
-      <span class="ev-desc">texte descriptif</span>
-    </div>
-  </div>
-*/
 function createEventEl(name, kind, desc) {
   var icon = EVENT_ICONS[kind] || String.fromCodePoint(0x2728);
 
@@ -302,7 +298,13 @@ window.addEventListener('onEventReceived', function(obj){
 
   if (listener === 'message') {
     if (fd.hideCommands && String(data.text || '').startsWith('!')) return;
-    var twitchColor = data.displayColor || data.color || '';
+    /*
+      On passe la couleur Twitch UNIQUEMENT si useTwitchColor est coche.
+      resolveNameColor gere le choix final.
+    */
+    var twitchColor = (fd.useTwitchColor === true)
+      ? (data.displayColor || data.color || '')
+      : '';
     addItem({
       type:   'chat',
       name:   data.displayName || data.nick || data.name || 'viewer',

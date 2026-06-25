@@ -15,6 +15,11 @@
     "label": "Use custom name bar color",
     "value": true
   },
+  "useTwitchColor": {
+    "type": "checkbox",
+    "label": "Use Twitch username color",
+    "value": false
+  },
   "nameBg": {
     "type": "colorpicker",
     "label": "Name bar color",
@@ -24,11 +29,6 @@
     "type": "colorpicker",
     "label": "Name text color",
     "value": "#111111"
-  },
-  "useTwitchColor": {
-    "type": "checkbox",
-    "label": "Use Twitch username color",
-    "value": false
   },
   "fontFamily": {
     "type": "googleFont",
