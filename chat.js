@@ -208,7 +208,6 @@ function createEventEl(name, kind, desc) {
   if (showKind) {
     var kindSpan = document.createElement('span');
     kindSpan.className = 'ev-kind';
-    /* CGIFT s'affiche comme GIFT dans la pilule */
     kindSpan.textContent = (kind === 'CGIFT') ? 'GIFT' : kind;
     topline.appendChild(kindSpan);
   }
@@ -317,31 +316,36 @@ window.addEventListener('onEventReceived', function(obj){
   if (listener === 'follower-latest')
     addItem({ type:'event', name:evName, kind:'FOLLOW', desc:'vient de follow la chaine !' });
 
-  /* ---- SUB / RESUB / GIFT SUB / COMMUNITY GIFT ---- */
+  /* ----------------------------------------------------------------
+     SUB / RESUB / GIFT / COMMUNITY GIFT
+     Champs SE officiels :
+       data.gifted      {boolean} — true si ce sub est un gift recu
+       data.bulkGifted  {boolean} — true si c'est l'event initial d'un community gift
+       data.sender      {string}  — pseudo du gifter
+       data.name        {string}  — pseudo du receveur (= celui qui sub)
+       data.amount      {number}  — nombre de subs pour un community gift
+       data.months      {number}  — nombre de mois pour un resub
+  ---------------------------------------------------------------- */
   if (listener === 'subscriber-latest') {
-    var gifter     = data.gifter || data.sender || '';
-    var bulkGifted = data.bulkGifted === true || data.isCommunityGift === true;
-    var isGifted   = data.gifted === true || data.isGift === true || !!gifter;
-    var amount     = data.amount || data.quantity || data.count || 1;
+    var isBulk   = data.bulkGifted === true;
+    var isGifted = data.gifted === true;
+    var sender   = data.sender || '';
 
-    if (bulkGifted) {
-      /* Community gift : X subs offerts a la communaute */
-      var qty = data.amount || data.quantity || data.count || amount;
-      addItem({ type:'event', name:evName, kind:'CGIFT',
+    if (isBulk) {
+      /* Community gift : sender offre X subs a la communaute */
+      var qty = data.amount || 1;
+      addItem({ type:'event', name: sender || evName, kind:'CGIFT',
         desc: 'offre ' + qty + ' sub' + (qty > 1 ? 's' : '') + ' a la communaute !' });
 
     } else if (isGifted) {
-      /* Gift sub simple : offert a un destinataire */
-      var recipient = data.recipient || data.recipientDisplayName
-                   || data.recipientName || data.giftee || '';
-      var giftDesc = recipient
-        ? 'offre un sub gift a ' + recipient + ' !'
-        : 'offre un sub gift !';
-      addItem({ type:'event', name: gifter || evName, kind:'GIFT', desc:giftDesc });
+      /* Gift sub simple : sender offre un sub a data.name */
+      var recipient = data.name || data.displayName || '';
+      addItem({ type:'event', name: sender || evName, kind:'GIFT',
+        desc: recipient ? 'offre un sub gift a ' + recipient + ' !' : 'offre un sub gift !' });
 
     } else {
       /* Sub classique ou resub */
-      var months  = data.months || data.streak || 1;
+      var months  = data.months || 1;
       var isResub = months > 1;
       var tierRaw = data.tier || data.subPlan || '';
       var tier    = tierRaw === '3000' ? ' [Tier 3]' : tierRaw === '2000' ? ' [Tier 2]' : '';
@@ -349,22 +353,7 @@ window.addEventListener('onEventReceived', function(obj){
       var subDesc = isResub
         ? 'se reabonne pour le ' + months + 'eme mois !' + tier + userMsg
         : "vient de s'abonner !" + tier + userMsg;
-      addItem({ type:'event', name:evName, kind: isResub ? 'RESUB' : 'SUB', desc:subDesc });
-    }
-  }
-
-  /* ---- SUBGIFT (listener alternatif de SE) ---- */
-  if (listener === 'subgift-latest') {
-    var sgRecipient = data.recipient || data.recipientDisplayName || '';
-    var sgGifter    = data.gifter || data.sender || evName;
-    var sgBulk      = data.bulkGifted === true || data.isCommunityGift === true;
-    if (sgBulk) {
-      var sgQty = data.amount || data.quantity || data.count || 1;
-      addItem({ type:'event', name:sgGifter, kind:'CGIFT',
-        desc: 'offre ' + sgQty + ' sub' + (sgQty > 1 ? 's' : '') + ' a la communaute !' });
-    } else {
-      addItem({ type:'event', name:sgGifter, kind:'GIFT',
-        desc: sgRecipient ? 'offre un sub gift a ' + sgRecipient + ' !' : 'offre un sub gift !' });
+      addItem({ type:'event', name: evName, kind: isResub ? 'RESUB' : 'SUB', desc: subDesc });
     }
   }
 
