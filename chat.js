@@ -32,21 +32,22 @@ function applyThemeVars(){
   var t = themes[theme] || themes.monster;
   var useCustom = !!fd.useNameBarColor;
 
-  root.style.setProperty('--theme-name-bg',      t.nameBg);
-  root.style.setProperty('--theme-name-text',     t.nameText);
-  root.style.setProperty('--theme-bubble-bg',     t.bubbleBg);
-  root.style.setProperty('--theme-bubble-bg-2',   t.bubbleBg2);
-  root.style.setProperty('--theme-bubble-text',   t.bubbleText);
-  root.style.setProperty('--theme-accent',        t.nameBg);
-  root.style.setProperty('--theme-accent-2',      t.bubbleBg2);
+  /*
+    Les variables CSS de theme sont definies via les classes .theme-xxx dans le CSS.
+    Pour que useNameBarColor les ecrase, on injecte les overrides directement
+    en inline style sur #widget — les inline styles ont une specificite superieure
+    aux regles de classe.
+  */
+  var finalNameBg   = useCustom && fd.nameBg   ? fd.nameBg   : t.nameBg;
+  var finalNameText = useCustom && fd.nameText ? fd.nameText : t.nameText;
 
-  root.style.setProperty('--name-bg',     useCustom && fd.nameBg   ? fd.nameBg   : t.nameBg);
-  root.style.setProperty('--name-text',   useCustom && fd.nameText ? fd.nameText : t.nameText);
+  w.style.setProperty('--name-bg',   finalNameBg);
+  w.style.setProperty('--name-text', finalNameText);
+
+  /* Les variables de bulle restent sur :root (pas de custom pour elles) */
   root.style.setProperty('--bubble-bg',   t.bubbleBg);
   root.style.setProperty('--bubble-bg-2', t.bubbleBg2);
   root.style.setProperty('--bubble-text', t.bubbleText);
-  root.style.setProperty('--accent',      t.nameBg);
-  root.style.setProperty('--accent-2',    t.bubbleBg2);
 }
 
 /* ---- BADGES ---- */
@@ -184,11 +185,6 @@ var EVENT_ICONS = {
   TIP:    String.fromCodePoint(0x1F4B8),
 };
 
-/*
-  Structure d'un event (une seule barre) :
-  [ emoji ]  [ Pseudo ]  [ texte descriptif ... ]  [ RAID ]
-  <ev-icon>  <ev-name>   <ev-desc>                 <ev-kind>
-*/
 function createEventEl(name, kind, desc) {
   var icon = EVENT_ICONS[kind] || String.fromCodePoint(0x2728);
 
@@ -284,7 +280,7 @@ function testSequence(){
   });
 }
 
-/* ---- STREAMELEMENTS EVENTS ---- */
+/* ---- STREAMELEMENTS ---- */
 window.addEventListener('onWidgetLoad', function(obj){
   fd = (obj.detail && obj.detail.fieldData) || {};
   maxItems = Math.max(1, parseInt(fd.maxItems || 11, 10));
@@ -317,9 +313,9 @@ window.addEventListener('onEventReceived', function(obj){
 
   var evName = event.name || data.displayName || data.name || 'Someone';
 
-  if (listener === 'follower-latest') {
+  if (listener === 'follower-latest')
     addItem({ type:'event', name:evName, kind:'FOLLOW', desc:'vient de follow la chaine !' });
-  }
+
   if (listener === 'subscriber-latest') {
     var months = data.months || data.streak || data.amount || 1;
     var isResub = months > 1;
@@ -331,22 +327,23 @@ window.addEventListener('onEventReceived', function(obj){
       : "vient de s'abonner !" + tier + userMsg;
     addItem({ type:'event', name:evName, kind: isResub ? 'RESUB' : 'SUB', desc:desc });
   }
+
   if (listener === 'subgift-latest') {
     var recipient = data.recipient || data.recipientDisplayName || '';
-    var giftDesc = recipient
-      ? 'offre un abonnement a ' + recipient + ' !'
-      : 'offre un abonnement a la communaute !';
-    addItem({ type:'event', name:evName, kind:'GIFT', desc:giftDesc });
+    addItem({ type:'event', name:evName, kind:'GIFT',
+      desc: recipient ? 'offre un abonnement a ' + recipient + ' !' : 'offre un abonnement a la communaute !' });
   }
-  if (listener === 'cheer-latest') {
-    var amount = data.amount || event.amount || '';
-    addItem({ type:'event', name:evName, kind:'CHEER', desc:'a envoye ' + amount + ' bits !' });
-  }
+
+  if (listener === 'cheer-latest')
+    addItem({ type:'event', name:evName, kind:'CHEER',
+      desc:'a envoye ' + (data.amount || event.amount || '') + ' bits !' });
+
   if (listener === 'raid-latest') {
     var viewers = data.amount || data.viewers || event.amount || 0;
     addItem({ type:'event', name:evName, kind:'RAID',
       desc:'debarque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
   }
+
   if (listener === 'tip-latest') {
     var tipAmount = data.amount || event.amount || '';
     var currency  = data.currency || event.currency || 'EUR';
