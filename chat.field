@@ -1,0 +1,67 @@
+{
+  "theme": {
+    "type": "dropdown",
+    "label": "Theme",
+    "value": "monster",
+    "options": {
+      "monster": "Monster",
+      "pastel": "Pastel",
+      "night": "Night",
+      "candy": "Candy"
+    }
+  },
+  "useNameBarColor": {
+    "type": "checkbox",
+    "label": "Use custom name bar color",
+    "value": true
+  },
+  "nameBg": {
+    "type": "colorpicker",
+    "label": "Name bar color",
+    "value": "#befe2b"
+  },
+  "nameText": {
+    "type": "colorpicker",
+    "label": "Name text color",
+    "value": "#111111"
+  },
+  "fontFamily": {
+    "type": "googleFont",
+    "label": "Font",
+    "value": "Inter"
+  },
+  "scale": {
+    "type": "slider",
+    "label": "Scale",
+    "value": 1,
+    "min": 0.6,
+    "max": 1.4,
+    "step": 0.01
+  },
+  "maxItems": {
+    "type": "slider",
+    "label": "Nombre max de messages affichés",
+    "value": 11,
+    "min": 1,
+    "max": 50,
+    "step": 1
+  },
+  "hideCommands": {
+    "type": "checkbox",
+    "label": "Hide commands",
+    "value": false
+  },
+  "testMessages": {
+    "type": "checkbox",
+    "label": "Test messages",
+    "value": false
+  },
+  "widgetName": {
+    "type": "hidden",
+    "value": "Monster Unified Chat"
+  },
+  "widgetAuthor": {
+    "type": "hidden",
+    "value": "Perplexity"
+  }
+}
