@@ -55,7 +55,7 @@ html, body{
 #feed::-webkit-scrollbar{ display:none; }
 #feed{ scrollbar-width:none; }
 
-/* ---- ITEM (commun chat + event) ---- */
+/* ---- ITEM commun ---- */
 .item{
   width:fit-content;
   max-width:100%;
@@ -67,7 +67,7 @@ html, body{
   flex-shrink:0;
 }
 
-/* ---- TOPLINE ---- */
+/* ---- TOPLINE (chat) ---- */
 .item .topline{
   display:inline-flex;
   align-items:center;
@@ -125,70 +125,48 @@ html, body{
   display:inline-block !important;
 }
 
-/* ---- EVENT ---- */
+/* ---- EVENT : une seule barre ---- */
 .item.event{
   width:auto;
   max-width:100%;
 }
 
 .item.event .topline{
-  display:flex;
-  width:auto;
-  gap:8px;
+  display:inline-flex;
   align-items:center;
+  gap:8px;
   background:var(--name-bg);
   color:var(--name-text);
   padding:10px 16px;
-  border-radius:12px 12px 12px 4px;
-  box-shadow:var(--shadow);
-  font-size:16px;
-  font-weight:900;
-  line-height:1.2;
-  position:relative;
-  z-index:3;
-}
-
-/* Icône emoji de l'event */
-.item.event .ev-icon{
-  font-size:18px;
-  line-height:1;
-  flex:0 0 auto;
-}
-
-.item.event .topline .name{
-  flex:0 0 auto;
-}
-
-.item.event .topline .kind{
-  font-size:11px;
-  font-weight:800;
-  padding:4px 8px;
-  border-radius:999px;
-  background:rgba(0,0,0,.12);
-  line-height:1;
-  letter-spacing:.03em;
-  text-transform:uppercase;
-}
-
-/* Bulle descriptive de l'event (sous la topline) */
-.item.event .ev-bubble{
-  margin-top:-6px;
-  margin-left:14px;
-  background:var(--bubble-bg);
-  color:var(--bubble-text);
-  padding:12px 14px 10px;
-  border-radius:4px 10px 10px 10px;
+  border-radius:10px;
   font-size:15px;
-  font-weight:500;
-  line-height:1.4;
+  font-weight:800;
+  line-height:1.2;
   box-shadow:var(--shadow);
-  max-width:100%;
-  word-break:break-word;
-  white-space:pre-wrap;
-  opacity:.92;
+  white-space:nowrap;
+  flex-wrap:wrap;
 }
 
-/* ---- THÈMES ---- */
+/* Icone emoji */
+.item.event .ev-icon{
+  font-size:17px;
+  line-height:1;
+  flex:0 0 auto;
+}
+
+/* Pseudo en gras */
+.item.event .ev-name{
+  font-weight:900;
+  flex:0 0 auto;
+}
+
+/* Texte descriptif : meme couleur, poids normal, leger separateur visuel */
+.item.event .ev-desc{
+  font-weight:500;
+  opacity:0.85;
+}
+
+/* ---- THEMES ---- */
 .theme-monster{
   --name-bg:#befe2b; --name-text:#111;
   --bubble-bg:#2b2d39; --bubble-bg-2:#242633; --bubble-text:#f6fbff;

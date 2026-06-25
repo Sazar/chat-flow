@@ -8,9 +8,6 @@ function esc(s){
   }[m]));
 }
 
-/* Retourne la couleur a utiliser pour le pseudo
-   - si useTwitchColor est coche ET qu'une couleur Twitch existe : couleur Twitch
-   - sinon : fd.nameText (couleur choisie dans les fields) */
 function resolveNameColor(twitchColor) {
   if (fd.useTwitchColor && twitchColor) return twitchColor;
   return fd.nameText || 'inherit';
@@ -187,8 +184,18 @@ var EVENT_ICONS = {
   TIP:    String.fromCodePoint(0x1F4B8),
 };
 
-/* ---- CREATION ELEMENT EVENT ---- */
-function createEventEl(name, kind, desc, nameColor) {
+/* ---- CREATION ELEMENT EVENT (une seule barre) ---- */
+/*
+  Structure :
+  <div class="item event">
+    <div class="topline">
+      <span class="ev-icon">emoji</span>
+      <span class="ev-name">Pseudo</span>
+      <span class="ev-desc">texte descriptif</span>
+    </div>
+  </div>
+*/
+function createEventEl(name, kind, desc) {
   var icon = EVENT_ICONS[kind] || String.fromCodePoint(0x2728);
 
   var el = document.createElement('div');
@@ -202,24 +209,17 @@ function createEventEl(name, kind, desc, nameColor) {
   iconSpan.textContent = icon;
 
   var nameSpan = document.createElement('span');
-  nameSpan.className = 'name';
-  nameSpan.style.color = nameColor || 'inherit';
+  nameSpan.className = 'ev-name';
   nameSpan.textContent = name;
 
-  var kindSpan = document.createElement('span');
-  kindSpan.className = 'kind';
-  kindSpan.textContent = kind;
+  var descSpan = document.createElement('span');
+  descSpan.className = 'ev-desc';
+  descSpan.textContent = desc;
 
   topline.appendChild(iconSpan);
   topline.appendChild(nameSpan);
-  topline.appendChild(kindSpan);
-
-  var bubble = document.createElement('div');
-  bubble.className = 'bubble ev-bubble';
-  bubble.textContent = desc;
-
+  topline.appendChild(descSpan);
   el.appendChild(topline);
-  el.appendChild(bubble);
 
   return el;
 }
@@ -241,7 +241,7 @@ function addItem(opts) {
   var el;
 
   if (type === 'event') {
-    el = createEventEl(name, kind, desc, color);
+    el = createEventEl(name, kind, desc);
   } else {
     el = document.createElement('div');
     el.className = 'item' + (alt ? ' alt' : '');
@@ -265,7 +265,6 @@ function testSequence(){
     { url: 'https://static-cdn.jtvnw.net/badges/v1/a3259b9d-5cfb-420a-ab9c-f8579d35c883/1' },
     { url: 'https://static-cdn.jtvnw.net/badges/v1/963b2afc-d913-41ab-b07d-67f74854c710/1' }
   ];
-  var nameColor = fd.nameText || '#111';
   var seq = [
     { type:'chat',  name:'HS_Hero',        text:"I'm dying of laughter Kappa LUL PogChamp", badges: TEST_BADGES, twitchColor:'#FF4500' },
     { type:'event', name:'ApexAce',        kind:'SUB',    desc:"vient de s'abonner !" },
@@ -301,7 +300,6 @@ window.addEventListener('onEventReceived', function(obj){
   var event    = (obj.detail.event) || {};
   var data     = event.data || event;
 
-  /* Messages chat : on passe la couleur Twitch a resolveNameColor */
   if (listener === 'message') {
     if (fd.hideCommands && String(data.text || '').startsWith('!')) return;
     var twitchColor = data.displayColor || data.color || '';
@@ -316,13 +314,10 @@ window.addEventListener('onEventReceived', function(obj){
     return;
   }
 
-  /* Events : pas de couleur Twitch, on utilise nameText */
-  var evName  = event.name || data.displayName || data.name || 'Someone';
-  var evColor = fd.nameText || 'inherit';
+  var evName = event.name || data.displayName || data.name || 'Someone';
 
   if (listener === 'follower-latest') {
-    addItem({ type:'event', name:evName, kind:'FOLLOW', color:evColor,
-      desc: 'vient de follow la chaine !' });
+    addItem({ type:'event', name:evName, kind:'FOLLOW', desc:'vient de follow la chaine !' });
   }
 
   if (listener === 'subscriber-latest') {
@@ -334,7 +329,7 @@ window.addEventListener('onEventReceived', function(obj){
     var desc = isResub
       ? 'se reabonne pour le ' + months + 'eme mois !' + tier + userMsg
       : "vient de s'abonner !" + tier + userMsg;
-    addItem({ type:'event', name:evName, kind: isResub ? 'RESUB' : 'SUB', color:evColor, desc:desc });
+    addItem({ type:'event', name:evName, kind: isResub ? 'RESUB' : 'SUB', desc:desc });
   }
 
   if (listener === 'subgift-latest') {
@@ -342,26 +337,25 @@ window.addEventListener('onEventReceived', function(obj){
     var giftDesc = recipient
       ? 'offre un abonnement a ' + recipient + ' !'
       : 'offre un abonnement a la communaute !';
-    addItem({ type:'event', name:evName, kind:'GIFT', color:evColor, desc:giftDesc });
+    addItem({ type:'event', name:evName, kind:'GIFT', desc:giftDesc });
   }
 
   if (listener === 'cheer-latest') {
     var amount = data.amount || event.amount || '';
-    addItem({ type:'event', name:evName, kind:'CHEER', color:evColor,
-      desc: 'a envoye ' + amount + ' bits !' });
+    addItem({ type:'event', name:evName, kind:'CHEER', desc:'a envoye ' + amount + ' bits !' });
   }
 
   if (listener === 'raid-latest') {
     var viewers = data.amount || data.viewers || event.amount || 0;
-    addItem({ type:'event', name:evName, kind:'RAID', color:evColor,
-      desc: 'debarque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
+    addItem({ type:'event', name:evName, kind:'RAID',
+      desc:'debarque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
   }
 
   if (listener === 'tip-latest') {
     var tipAmount = data.amount || event.amount || '';
     var currency  = data.currency || event.currency || 'EUR';
     var tipMsg    = data.message ? ' - "' + data.message + '"' : '';
-    addItem({ type:'event', name:evName, kind:'TIP', color:evColor,
-      desc: 'a fait un don de ' + tipAmount + ' ' + currency + ' !' + tipMsg });
+    addItem({ type:'event', name:evName, kind:'TIP',
+      desc:'a fait un don de ' + tipAmount + ' ' + currency + ' !' + tipMsg });
   }
 });
