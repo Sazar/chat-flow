@@ -32,19 +32,12 @@ function applyThemeVars(){
   var t = themes[theme] || themes.monster;
   var useCustom = !!fd.useNameBarColor;
 
-  /*
-    Les variables CSS de theme sont definies via les classes .theme-xxx dans le CSS.
-    Pour que useNameBarColor les ecrase, on injecte les overrides directement
-    en inline style sur #widget — les inline styles ont une specificite superieure
-    aux regles de classe.
-  */
   var finalNameBg   = useCustom && fd.nameBg   ? fd.nameBg   : t.nameBg;
   var finalNameText = useCustom && fd.nameText ? fd.nameText : t.nameText;
 
   w.style.setProperty('--name-bg',   finalNameBg);
   w.style.setProperty('--name-text', finalNameText);
 
-  /* Les variables de bulle restent sur :root (pas de custom pour elles) */
   root.style.setProperty('--bubble-bg',   t.bubbleBg);
   root.style.setProperty('--bubble-bg-2', t.bubbleBg2);
   root.style.setProperty('--bubble-text', t.bubbleText);
@@ -206,16 +199,19 @@ function createEventEl(name, kind, desc) {
   descSpan.className = 'ev-desc';
   descSpan.textContent = desc;
 
-  var kindSpan = document.createElement('span');
-  kindSpan.className = 'ev-kind';
-  kindSpan.textContent = kind;
-
   topline.appendChild(iconSpan);
   topline.appendChild(nameSpan);
   topline.appendChild(descSpan);
-  topline.appendChild(kindSpan);
-  el.appendChild(topline);
 
+  /* Pilule kind : uniquement si showEventKind est coche */
+  if (fd.showEventKind !== false) {
+    var kindSpan = document.createElement('span');
+    kindSpan.className = 'ev-kind';
+    kindSpan.textContent = kind;
+    topline.appendChild(kindSpan);
+  }
+
+  el.appendChild(topline);
   return el;
 }
 

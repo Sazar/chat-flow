@@ -20,6 +20,11 @@
     "label": "Use Twitch username color",
     "value": false
   },
+  "showEventKind": {
+    "type": "checkbox",
+    "label": "Show event type badge (SUB / RAID / ...)",
+    "value": true
+  },
   "nameBg": {
     "type": "colorpicker",
     "label": "Name bar color",
