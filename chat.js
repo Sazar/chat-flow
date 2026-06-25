@@ -169,15 +169,38 @@ function renderText(data, isTest){
 
 /* ---- ICONES EVENEMENTS ---- */
 var EVENT_ICONS = {
-  FOLLOW: String.fromCodePoint(0x1F49C),
-  SUB:    String.fromCodePoint(0x2B50),
-  RESUB:  String.fromCodePoint(0x2B50),
-  GIFT:   String.fromCodePoint(0x1F381),
-  CGIFT:  String.fromCodePoint(0x1F381),
-  CHEER:  String.fromCodePoint(0x1F48E),
-  RAID:   String.fromCodePoint(0x2694) + String.fromCodePoint(0xFE0F),
-  TIP:    String.fromCodePoint(0x1F4B8),
+  FOLLOW:   String.fromCodePoint(0x1F49C),
+  SUB:      String.fromCodePoint(0x2B50),
+  SUB_T2:   String.fromCodePoint(0x2B50),
+  SUB_T3:   String.fromCodePoint(0x2B50),
+  RESUB:    String.fromCodePoint(0x2B50),
+  RESUB_T2: String.fromCodePoint(0x2B50),
+  RESUB_T3: String.fromCodePoint(0x2B50),
+  GIFT:     String.fromCodePoint(0x1F381),
+  CGIFT:    String.fromCodePoint(0x1F381),
+  CHEER:    String.fromCodePoint(0x1F48E),
+  RAID:     String.fromCodePoint(0x2694) + String.fromCodePoint(0xFE0F),
+  TIP:      String.fromCodePoint(0x1F4B8),
 };
+
+/* Convertit un kind interne en label affiche dans la pilule */
+function kindLabel(kind) {
+  var labels = {
+    SUB:      'SUB',
+    SUB_T2:   'SUB T2',
+    SUB_T3:   'SUB T3',
+    RESUB:    'RESUB',
+    RESUB_T2: 'RESUB T2',
+    RESUB_T3: 'RESUB T3',
+    FOLLOW:   'FOLLOW',
+    GIFT:     'GIFT',
+    CGIFT:    'GIFT',
+    CHEER:    'CHEER',
+    RAID:     'RAID',
+    TIP:      'TIP',
+  };
+  return labels[kind] || kind;
+}
 
 function createEventEl(name, kind, desc) {
   var icon = EVENT_ICONS[kind] || String.fromCodePoint(0x2728);
@@ -208,7 +231,7 @@ function createEventEl(name, kind, desc) {
   if (showKind) {
     var kindSpan = document.createElement('span');
     kindSpan.className = 'ev-kind';
-    kindSpan.textContent = (kind === 'CGIFT') ? 'GIFT' : kind;
+    kindSpan.textContent = kindLabel(kind);
     topline.appendChild(kindSpan);
   }
 
@@ -259,14 +282,16 @@ function testSequence(){
   ];
   var seq = [
     { type:'chat',  name:'HS_Hero',        text:"I'm dying of laughter Kappa LUL PogChamp", badges: TEST_BADGES, twitchColor:'#FF4500' },
-    { type:'event', name:'ApexAce',        kind:'SUB',    desc:"vient de s'abonner !" },
-    { type:'chat',  name:'RocketRacer',    text:'So close! BibleThump ResidentSleeper',    badges: TEST_BADGES, twitchColor:'#1E90FF' },
-    { type:'event', name:'PixelPirate',    kind:'FOLLOW', desc:'vient de follow la chaîne !' },
-    { type:'chat',  name:'SpeedrunSultan', text:'This game is intense monkaS KEKW',        badges: TEST_BADGES, twitchColor:'#9ACD32' },
-    { type:'event', name:'MegaRaider',     kind:'RAID',   desc:'débarque avec 42 viewers !' },
-    { type:'event', name:'GiftKing',       kind:'GIFT',   desc:'offre un sub gift à PixelFox !' },
-    { type:'event', name:'GiftKing',       kind:'CGIFT',  desc:'offre 5 sub gifts à la communauté !' },
-    { type:'event', name:'BitsDude',       kind:'CHEER',  desc:'a envoyé 500 bits !' },
+    { type:'event', name:'ApexAce',        kind:'SUB',      desc:"vient de s'abonner !" },
+    { type:'event', name:'NightOwl',       kind:'SUB_T2',   desc:"vient de s'abonner [Tier 2] !" },
+    { type:'event', name:'LegendPro',      kind:'SUB_T3',   desc:"vient de s'abonner [Tier 3] !" },
+    { type:'chat',  name:'RocketRacer',    text:'So close! BibleThump ResidentSleeper', badges: TEST_BADGES, twitchColor:'#1E90FF' },
+    { type:'event', name:'PixelPirate',    kind:'FOLLOW',   desc:'vient de follow la chaîne !' },
+    { type:'chat',  name:'SpeedrunSultan', text:'This game is intense monkaS KEKW', badges: TEST_BADGES, twitchColor:'#9ACD32' },
+    { type:'event', name:'MegaRaider',     kind:'RAID',     desc:'débarque avec 42 viewers !' },
+    { type:'event', name:'GiftKing',       kind:'GIFT',     desc:'offre un sub gift à PixelFox !' },
+    { type:'event', name:'GiftKing',       kind:'CGIFT',    desc:'offre 5 sub gifts à la communauté !' },
+    { type:'event', name:'BitsDude',       kind:'CHEER',    desc:'a envoyé 500 bits !' },
   ];
   seq.forEach(function(it, i){
     setTimeout(function(){
@@ -321,6 +346,9 @@ window.addEventListener('onEventReceived', function(obj){
     var isBulk   = data.bulkGifted === true;
     var isGifted = data.gifted === true;
     var sender   = data.sender || '';
+    var tierRaw  = data.tier || data.subPlan || '';
+    var tierSuffix = tierRaw === '3000' ? '_T3' : tierRaw === '2000' ? '_T2' : '';
+    var tierLabel  = tierRaw === '3000' ? ' [Tier 3]' : tierRaw === '2000' ? ' [Tier 2]' : '';
 
     if (isBulk) {
       var qty = data.amount || 1;
@@ -335,13 +363,13 @@ window.addEventListener('onEventReceived', function(obj){
     } else {
       var months  = data.months || 1;
       var isResub = months > 1;
-      var tierRaw = data.tier || data.subPlan || '';
-      var tier    = tierRaw === '3000' ? ' [Tier 3]' : tierRaw === '2000' ? ' [Tier 2]' : '';
       var userMsg = data.message ? ' - "' + data.message + '"' : '';
+      var baseKind = isResub ? 'RESUB' : 'SUB';
+      var kind = baseKind + tierSuffix;
       var subDesc = isResub
-        ? 'se réabonne pour le ' + months + 'ème mois !' + tier + userMsg
-        : "vient de s'abonner !" + tier + userMsg;
-      addItem({ type:'event', name: evName, kind: isResub ? 'RESUB' : 'SUB', desc: subDesc });
+        ? 'se réabonne pour le ' + months + 'ème mois !' + tierLabel + userMsg
+        : "vient de s'abonner !" + tierLabel + userMsg;
+      addItem({ type:'event', name: evName, kind: kind, desc: subDesc });
     }
   }
 
