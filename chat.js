@@ -8,12 +8,6 @@ function esc(s){
   }[m]));
 }
 
-/*
-  resolveNameColor :
-  - useTwitchColor COCHE  + couleur Twitch dispo => couleur Twitch
-  - useTwitchColor DECOCHE ou pas de couleur Twitch => fd.nameText
-  fd.nameText est toujours le fallback final.
-*/
 function resolveNameColor(twitchColor) {
   if (fd.useTwitchColor === true && twitchColor) return twitchColor;
   return fd.nameText || 'inherit';
@@ -106,7 +100,7 @@ function renderFromPositions(text, emotes, getUrl){
   return out.replace(/\n/g, '<br>');
 }
 
-/* ---- EMOTES 3RD PARTY (7TV / BTTV / FFZ) ---- */
+/* ---- EMOTES 3RD PARTY ---- */
 async function loadThirdPartyEmotes(channelId){
   if (!channelId) return;
   try {
@@ -190,7 +184,11 @@ var EVENT_ICONS = {
   TIP:    String.fromCodePoint(0x1F4B8),
 };
 
-/* ---- CREATION ELEMENT EVENT (une seule barre) ---- */
+/*
+  Structure d'un event (une seule barre) :
+  [ emoji ]  [ Pseudo ]  [ texte descriptif ... ]  [ RAID ]
+  <ev-icon>  <ev-name>   <ev-desc>                 <ev-kind>
+*/
 function createEventEl(name, kind, desc) {
   var icon = EVENT_ICONS[kind] || String.fromCodePoint(0x2728);
 
@@ -212,9 +210,14 @@ function createEventEl(name, kind, desc) {
   descSpan.className = 'ev-desc';
   descSpan.textContent = desc;
 
+  var kindSpan = document.createElement('span');
+  kindSpan.className = 'ev-kind';
+  kindSpan.textContent = kind;
+
   topline.appendChild(iconSpan);
   topline.appendChild(nameSpan);
   topline.appendChild(descSpan);
+  topline.appendChild(kindSpan);
   el.appendChild(topline);
 
   return el;
@@ -298,10 +301,6 @@ window.addEventListener('onEventReceived', function(obj){
 
   if (listener === 'message') {
     if (fd.hideCommands && String(data.text || '').startsWith('!')) return;
-    /*
-      On passe la couleur Twitch UNIQUEMENT si useTwitchColor est coche.
-      resolveNameColor gere le choix final.
-    */
     var twitchColor = (fd.useTwitchColor === true)
       ? (data.displayColor || data.color || '')
       : '';
@@ -321,7 +320,6 @@ window.addEventListener('onEventReceived', function(obj){
   if (listener === 'follower-latest') {
     addItem({ type:'event', name:evName, kind:'FOLLOW', desc:'vient de follow la chaine !' });
   }
-
   if (listener === 'subscriber-latest') {
     var months = data.months || data.streak || data.amount || 1;
     var isResub = months > 1;
@@ -333,7 +331,6 @@ window.addEventListener('onEventReceived', function(obj){
       : "vient de s'abonner !" + tier + userMsg;
     addItem({ type:'event', name:evName, kind: isResub ? 'RESUB' : 'SUB', desc:desc });
   }
-
   if (listener === 'subgift-latest') {
     var recipient = data.recipient || data.recipientDisplayName || '';
     var giftDesc = recipient
@@ -341,18 +338,15 @@ window.addEventListener('onEventReceived', function(obj){
       : 'offre un abonnement a la communaute !';
     addItem({ type:'event', name:evName, kind:'GIFT', desc:giftDesc });
   }
-
   if (listener === 'cheer-latest') {
     var amount = data.amount || event.amount || '';
     addItem({ type:'event', name:evName, kind:'CHEER', desc:'a envoye ' + amount + ' bits !' });
   }
-
   if (listener === 'raid-latest') {
     var viewers = data.amount || data.viewers || event.amount || 0;
     addItem({ type:'event', name:evName, kind:'RAID',
       desc:'debarque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
   }
-
   if (listener === 'tip-latest') {
     var tipAmount = data.amount || event.amount || '';
     var currency  = data.currency || event.currency || 'EUR';
