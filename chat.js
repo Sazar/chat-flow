@@ -173,6 +173,7 @@ var EVENT_ICONS = {
   SUB:    String.fromCodePoint(0x2B50),
   RESUB:  String.fromCodePoint(0x2B50),
   GIFT:   String.fromCodePoint(0x1F381),
+  CGIFT:  String.fromCodePoint(0x1F381),
   CHEER:  String.fromCodePoint(0x1F48E),
   RAID:   String.fromCodePoint(0x2694) + String.fromCodePoint(0xFE0F),
   TIP:    String.fromCodePoint(0x1F4B8),
@@ -203,16 +204,12 @@ function createEventEl(name, kind, desc) {
   topline.appendChild(nameSpan);
   topline.appendChild(descSpan);
 
-  /*
-    fd est toujours a jour au moment du rendu (onEventReceived arrive apres onWidgetLoad).
-    On lit fd.showEventKind ici, au moment de la creation de l'element.
-    La valeur par defaut est true : on affiche le badge sauf si explicitement false.
-  */
   var showKind = (fd.showEventKind === undefined) ? true : (fd.showEventKind === true);
   if (showKind) {
     var kindSpan = document.createElement('span');
     kindSpan.className = 'ev-kind';
-    kindSpan.textContent = kind;
+    /* CGIFT s'affiche comme GIFT dans la pilule */
+    kindSpan.textContent = (kind === 'CGIFT') ? 'GIFT' : kind;
     topline.appendChild(kindSpan);
   }
 
@@ -268,7 +265,8 @@ function testSequence(){
     { type:'event', name:'PixelPirate',    kind:'FOLLOW', desc:'vient de follow la chaine !' },
     { type:'chat',  name:'SpeedrunSultan', text:'This game is intense monkaS KEKW',        badges: TEST_BADGES, twitchColor:'#9ACD32' },
     { type:'event', name:'MegaRaider',     kind:'RAID',   desc:'debarque avec 42 viewers !' },
-    { type:'event', name:'GiftKing',       kind:'GIFT',   desc:'offre 5 abonnements a la communaute !' },
+    { type:'event', name:'GiftKing',       kind:'GIFT',   desc:'offre un sub gift a PixelFox !' },
+    { type:'event', name:'GiftKing',       kind:'CGIFT',  desc:'offre 5 sub gifts a la communaute !' },
     { type:'event', name:'BitsDude',       kind:'CHEER',  desc:'a envoye 500 bits !' },
   ];
   seq.forEach(function(it, i){
@@ -296,6 +294,7 @@ window.addEventListener('onEventReceived', function(obj){
   var event    = (obj.detail.event) || {};
   var data     = event.data || event;
 
+  /* ---- CHAT ---- */
   if (listener === 'message') {
     if (fd.hideCommands && String(data.text || '').startsWith('!')) return;
     var twitchColor = (fd.useTwitchColor === true)
@@ -314,37 +313,74 @@ window.addEventListener('onEventReceived', function(obj){
 
   var evName = event.name || data.displayName || data.name || 'Someone';
 
+  /* ---- FOLLOW ---- */
   if (listener === 'follower-latest')
     addItem({ type:'event', name:evName, kind:'FOLLOW', desc:'vient de follow la chaine !' });
 
+  /* ---- SUB / RESUB / GIFT SUB / COMMUNITY GIFT ---- */
   if (listener === 'subscriber-latest') {
-    var months = data.months || data.streak || data.amount || 1;
-    var isResub = months > 1;
-    var tierRaw = data.tier || data.subPlan || '';
-    var tier = tierRaw === '3000' ? ' [Tier 3]' : tierRaw === '2000' ? ' [Tier 2]' : '';
-    var userMsg = data.message ? ' - "' + data.message + '"' : '';
-    var desc = isResub
-      ? 'se reabonne pour le ' + months + 'eme mois !' + tier + userMsg
-      : "vient de s'abonner !" + tier + userMsg;
-    addItem({ type:'event', name:evName, kind: isResub ? 'RESUB' : 'SUB', desc:desc });
+    var gifter     = data.gifter || data.sender || '';
+    var bulkGifted = data.bulkGifted === true || data.isCommunityGift === true;
+    var isGifted   = data.gifted === true || data.isGift === true || !!gifter;
+    var amount     = data.amount || data.quantity || data.count || 1;
+
+    if (bulkGifted) {
+      /* Community gift : X subs offerts a la communaute */
+      var qty = data.amount || data.quantity || data.count || amount;
+      addItem({ type:'event', name:evName, kind:'CGIFT',
+        desc: 'offre ' + qty + ' sub' + (qty > 1 ? 's' : '') + ' a la communaute !' });
+
+    } else if (isGifted) {
+      /* Gift sub simple : offert a un destinataire */
+      var recipient = data.recipient || data.recipientDisplayName
+                   || data.recipientName || data.giftee || '';
+      var giftDesc = recipient
+        ? 'offre un sub gift a ' + recipient + ' !'
+        : 'offre un sub gift !';
+      addItem({ type:'event', name: gifter || evName, kind:'GIFT', desc:giftDesc });
+
+    } else {
+      /* Sub classique ou resub */
+      var months  = data.months || data.streak || 1;
+      var isResub = months > 1;
+      var tierRaw = data.tier || data.subPlan || '';
+      var tier    = tierRaw === '3000' ? ' [Tier 3]' : tierRaw === '2000' ? ' [Tier 2]' : '';
+      var userMsg = data.message ? ' - "' + data.message + '"' : '';
+      var subDesc = isResub
+        ? 'se reabonne pour le ' + months + 'eme mois !' + tier + userMsg
+        : "vient de s'abonner !" + tier + userMsg;
+      addItem({ type:'event', name:evName, kind: isResub ? 'RESUB' : 'SUB', desc:subDesc });
+    }
   }
 
+  /* ---- SUBGIFT (listener alternatif de SE) ---- */
   if (listener === 'subgift-latest') {
-    var recipient = data.recipient || data.recipientDisplayName || '';
-    addItem({ type:'event', name:evName, kind:'GIFT',
-      desc: recipient ? 'offre un abonnement a ' + recipient + ' !' : 'offre un abonnement a la communaute !' });
+    var sgRecipient = data.recipient || data.recipientDisplayName || '';
+    var sgGifter    = data.gifter || data.sender || evName;
+    var sgBulk      = data.bulkGifted === true || data.isCommunityGift === true;
+    if (sgBulk) {
+      var sgQty = data.amount || data.quantity || data.count || 1;
+      addItem({ type:'event', name:sgGifter, kind:'CGIFT',
+        desc: 'offre ' + sgQty + ' sub' + (sgQty > 1 ? 's' : '') + ' a la communaute !' });
+    } else {
+      addItem({ type:'event', name:sgGifter, kind:'GIFT',
+        desc: sgRecipient ? 'offre un sub gift a ' + sgRecipient + ' !' : 'offre un sub gift !' });
+    }
   }
 
+  /* ---- CHEER ---- */
   if (listener === 'cheer-latest')
     addItem({ type:'event', name:evName, kind:'CHEER',
       desc:'a envoye ' + (data.amount || event.amount || '') + ' bits !' });
 
+  /* ---- RAID ---- */
   if (listener === 'raid-latest') {
     var viewers = data.amount || data.viewers || event.amount || 0;
     addItem({ type:'event', name:evName, kind:'RAID',
       desc:'debarque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
   }
 
+  /* ---- TIP / DON ---- */
   if (listener === 'tip-latest') {
     var tipAmount = data.amount || event.amount || '';
     var currency  = data.currency || event.currency || 'EUR';
