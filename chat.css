@@ -88,15 +88,16 @@ html, body{
 .item.event .topline{
   display:inline-flex;
   align-items:center;
+  flex-wrap:wrap;
   gap:9px;
   background:var(--name-bg); color:var(--name-text);
   padding:20px 16px;
   border-radius:14px;
   font-size:17px;
   font-weight:800;
-  line-height:1.2;
+  line-height:1.4;
   box-shadow:var(--shadow);
-  white-space:nowrap;
+  word-break:break-word;
 }
 
 .item.event .ev-icon{
@@ -110,7 +111,8 @@ html, body{
 .item.event .ev-desc{
   font-weight:500;
   opacity:0.88;
-  flex:0 1 auto;
+  flex:1 1 auto;
+  word-break:break-word;
 }
 
 .item.event .ev-kind{
