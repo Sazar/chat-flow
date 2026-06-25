@@ -25,6 +25,11 @@
     "label": "Name text color",
     "value": "#111111"
   },
+  "useTwitchColor": {
+    "type": "checkbox",
+    "label": "Use Twitch username color",
+    "value": false
+  },
   "fontFamily": {
     "type": "googleFont",
     "label": "Font",
@@ -40,7 +45,7 @@
   },
   "maxItems": {
     "type": "slider",
-    "label": "Nombre max de messages affichés",
+    "label": "Nombre max de messages affich\u00e9s",
     "value": 11,
     "min": 1,
     "max": 50,

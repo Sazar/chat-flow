@@ -8,24 +8,32 @@ function esc(s){
   }[m]));
 }
 
+/* Retourne la couleur a utiliser pour le pseudo
+   - si useTwitchColor est coche ET qu'une couleur Twitch existe : couleur Twitch
+   - sinon : fd.nameText (couleur choisie dans les fields) */
+function resolveNameColor(twitchColor) {
+  if (fd.useTwitchColor && twitchColor) return twitchColor;
+  return fd.nameText || 'inherit';
+}
+
 function applyThemeVars(){
-  const w = document.getElementById('widget');
-  const theme = String(fd.theme || 'monster').toLowerCase();
+  var w = document.getElementById('widget');
+  var theme = String(fd.theme || 'monster').toLowerCase();
   w.className = 'theme-' + theme;
 
-  const root = document.documentElement;
+  var root = document.documentElement;
   root.style.setProperty('--scale', fd.scale || 1);
   if (fd.fontFamily) root.style.setProperty('--font', fd.fontFamily);
 
-  const themes = {
+  var themes = {
     monster: { nameBg:'#befe2b', nameText:'#111111', bubbleBg:'#2b2d39', bubbleBg2:'#242633', bubbleText:'#f6fbff' },
     pastel:  { nameBg:'#ffccf2', nameText:'#2b2140', bubbleBg:'#f7f0ff', bubbleBg2:'#efe7ff', bubbleText:'#3b2b58' },
     night:   { nameBg:'#8b5cf6', nameText:'#ffffff', bubbleBg:'#121827', bubbleBg2:'#0f172a', bubbleText:'#eef2ff' },
     candy:   { nameBg:'#ff7ab6', nameText:'#ffffff', bubbleBg:'#1f2937', bubbleBg2:'#111827', bubbleText:'#f9fafb' }
   };
 
-  const t = themes[theme] || themes.monster;
-  const useCustom = !!fd.useNameBarColor;
+  var t = themes[theme] || themes.monster;
+  var useCustom = !!fd.useNameBarColor;
 
   root.style.setProperty('--theme-name-bg',      t.nameBg);
   root.style.setProperty('--theme-name-text',     t.nameText);
@@ -168,15 +176,15 @@ function renderText(data, isTest){
   return injectThirdParty(esc(rawText).replace(/\n/g,'<br>'));
 }
 
-/* ---- ICONES EVENEMENTS (texte brut, pas d'esc) ---- */
+/* ---- ICONES EVENEMENTS ---- */
 var EVENT_ICONS = {
-  FOLLOW: String.fromCodePoint(0x1F49C),  // coeur violet
-  SUB:    String.fromCodePoint(0x2B50),   // etoile
+  FOLLOW: String.fromCodePoint(0x1F49C),
+  SUB:    String.fromCodePoint(0x2B50),
   RESUB:  String.fromCodePoint(0x2B50),
-  GIFT:   String.fromCodePoint(0x1F381),  // cadeau
-  CHEER:  String.fromCodePoint(0x1F48E),  // diamant
-  RAID:   String.fromCodePoint(0x2694) + String.fromCodePoint(0xFE0F), // epees
-  TIP:    String.fromCodePoint(0x1F4B8),  // billet
+  GIFT:   String.fromCodePoint(0x1F381),
+  CHEER:  String.fromCodePoint(0x1F48E),
+  RAID:   String.fromCodePoint(0x2694) + String.fromCodePoint(0xFE0F),
+  TIP:    String.fromCodePoint(0x1F4B8),
 };
 
 /* ---- CREATION ELEMENT EVENT ---- */
@@ -186,18 +194,17 @@ function createEventEl(name, kind, desc, nameColor) {
   var el = document.createElement('div');
   el.className = 'item event';
 
-  // Topline
   var topline = document.createElement('div');
   topline.className = 'topline';
 
   var iconSpan = document.createElement('span');
   iconSpan.className = 'ev-icon';
-  iconSpan.textContent = icon;        // textContent = pas d'encodage HTML
+  iconSpan.textContent = icon;
 
   var nameSpan = document.createElement('span');
   nameSpan.className = 'name';
   nameSpan.style.color = nameColor || 'inherit';
-  nameSpan.textContent = name;        // textContent = securise et pas d'encodage emoji
+  nameSpan.textContent = name;
 
   var kindSpan = document.createElement('span');
   kindSpan.className = 'kind';
@@ -207,10 +214,9 @@ function createEventEl(name, kind, desc, nameColor) {
   topline.appendChild(nameSpan);
   topline.appendChild(kindSpan);
 
-  // Bulle descriptive
   var bubble = document.createElement('div');
   bubble.className = 'bubble ev-bubble';
-  bubble.textContent = desc;          // textContent = texte brut, pas d'encodage
+  bubble.textContent = desc;
 
   el.appendChild(topline);
   el.appendChild(bubble);
@@ -220,16 +226,16 @@ function createEventEl(name, kind, desc, nameColor) {
 
 /* ---- AJOUT ITEM + SCROLL ---- */
 function addItem(opts) {
-  var type      = opts.type      || 'chat';
-  var name      = opts.name      || 'viewer';
-  var desc      = opts.desc      || '';
-  var text      = opts.text      || '';
-  var badges    = opts.badges    || [];
-  var color     = opts.color     || 'inherit';
-  var alt       = opts.alt       || false;
-  var kind      = opts.kind      || '';
-  var data      = opts.data      || null;
-  var isTest    = opts.isTest    || false;
+  var type   = opts.type   || 'chat';
+  var name   = opts.name   || 'viewer';
+  var desc   = opts.desc   || '';
+  var text   = opts.text   || '';
+  var badges = opts.badges || [];
+  var color  = opts.color  || 'inherit';
+  var alt    = opts.alt    || false;
+  var kind   = opts.kind   || '';
+  var data   = opts.data   || null;
+  var isTest = opts.isTest || false;
 
   var feed = document.getElementById('feed');
   var el;
@@ -261,19 +267,20 @@ function testSequence(){
   ];
   var nameColor = fd.nameText || '#111';
   var seq = [
-    { type:'chat',  name:'HS_Hero',        text:"I'm dying of laughter Kappa LUL PogChamp", badges: TEST_BADGES },
+    { type:'chat',  name:'HS_Hero',        text:"I'm dying of laughter Kappa LUL PogChamp", badges: TEST_BADGES, twitchColor:'#FF4500' },
     { type:'event', name:'ApexAce',        kind:'SUB',    desc:"vient de s'abonner !" },
-    { type:'chat',  name:'RocketRacer',    text:'So close! BibleThump ResidentSleeper',    badges: TEST_BADGES },
+    { type:'chat',  name:'RocketRacer',    text:'So close! BibleThump ResidentSleeper',    badges: TEST_BADGES, twitchColor:'#1E90FF' },
     { type:'event', name:'PixelPirate',    kind:'FOLLOW', desc:'vient de follow la chaine !' },
-    { type:'chat',  name:'SpeedrunSultan', text:'This game is intense monkaS KEKW',        badges: TEST_BADGES },
+    { type:'chat',  name:'SpeedrunSultan', text:'This game is intense monkaS KEKW',        badges: TEST_BADGES, twitchColor:'#9ACD32' },
     { type:'event', name:'MegaRaider',     kind:'RAID',   desc:'debarque avec 42 viewers !' },
     { type:'event', name:'GiftKing',       kind:'GIFT',   desc:'offre 5 abonnements a la communaute !' },
     { type:'event', name:'BitsDude',       kind:'CHEER',  desc:'a envoye 500 bits !' },
   ];
   seq.forEach(function(it, i){
     setTimeout(function(){
+      var color = resolveNameColor(it.twitchColor || '');
       addItem({ type:it.type, name:it.name, kind:it.kind||'', desc:it.desc||'',
-                color:nameColor, alt: i % 2 === 1,
+                color:color, alt: i % 2 === 1,
                 data:{ text: it.text || '' }, badges: it.badges||[], isTest:true });
     }, i * 800);
   });
@@ -293,32 +300,31 @@ window.addEventListener('onEventReceived', function(obj){
   var listener = obj.detail.listener;
   var event    = (obj.detail.event) || {};
   var data     = event.data || event;
-  var nameColor = data.displayColor || data.color || fd.nameText || 'inherit';
 
-  /* Messages chat */
+  /* Messages chat : on passe la couleur Twitch a resolveNameColor */
   if (listener === 'message') {
     if (fd.hideCommands && String(data.text || '').startsWith('!')) return;
+    var twitchColor = data.displayColor || data.color || '';
     addItem({
       type:   'chat',
       name:   data.displayName || data.nick || data.name || 'viewer',
       badges: data.badges || [],
-      color:  nameColor,
+      color:  resolveNameColor(twitchColor),
       data:   data,
       isTest: false
     });
     return;
   }
 
+  /* Events : pas de couleur Twitch, on utilise nameText */
   var evName  = event.name || data.displayName || data.name || 'Someone';
   var evColor = fd.nameText || 'inherit';
 
-  /* Follow */
   if (listener === 'follower-latest') {
     addItem({ type:'event', name:evName, kind:'FOLLOW', color:evColor,
       desc: 'vient de follow la chaine !' });
   }
 
-  /* Sub / Resub */
   if (listener === 'subscriber-latest') {
     var months = data.months || data.streak || data.amount || 1;
     var isResub = months > 1;
@@ -331,7 +337,6 @@ window.addEventListener('onEventReceived', function(obj){
     addItem({ type:'event', name:evName, kind: isResub ? 'RESUB' : 'SUB', color:evColor, desc:desc });
   }
 
-  /* Gift sub */
   if (listener === 'subgift-latest') {
     var recipient = data.recipient || data.recipientDisplayName || '';
     var giftDesc = recipient
@@ -340,25 +345,22 @@ window.addEventListener('onEventReceived', function(obj){
     addItem({ type:'event', name:evName, kind:'GIFT', color:evColor, desc:giftDesc });
   }
 
-  /* Cheer / Bits */
   if (listener === 'cheer-latest') {
     var amount = data.amount || event.amount || '';
     addItem({ type:'event', name:evName, kind:'CHEER', color:evColor,
       desc: 'a envoye ' + amount + ' bits !' });
   }
 
-  /* Raid */
   if (listener === 'raid-latest') {
     var viewers = data.amount || data.viewers || event.amount || 0;
     addItem({ type:'event', name:evName, kind:'RAID', color:evColor,
       desc: 'debarque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
   }
 
-  /* Tip / Don */
   if (listener === 'tip-latest') {
-    var tipAmount   = data.amount || event.amount || '';
-    var currency    = data.currency || event.currency || 'EUR';
-    var tipMsg      = data.message ? ' - "' + data.message + '"' : '';
+    var tipAmount = data.amount || event.amount || '';
+    var currency  = data.currency || event.currency || 'EUR';
+    var tipMsg    = data.message ? ' - "' + data.message + '"' : '';
     addItem({ type:'event', name:evName, kind:'TIP', color:evColor,
       desc: 'a fait un don de ' + tipAmount + ' ' + currency + ' !' + tipMsg });
   }
