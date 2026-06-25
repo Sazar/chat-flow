@@ -261,12 +261,12 @@ function testSequence(){
     { type:'chat',  name:'HS_Hero',        text:"I'm dying of laughter Kappa LUL PogChamp", badges: TEST_BADGES, twitchColor:'#FF4500' },
     { type:'event', name:'ApexAce',        kind:'SUB',    desc:"vient de s'abonner !" },
     { type:'chat',  name:'RocketRacer',    text:'So close! BibleThump ResidentSleeper',    badges: TEST_BADGES, twitchColor:'#1E90FF' },
-    { type:'event', name:'PixelPirate',    kind:'FOLLOW', desc:'vient de follow la chaine !' },
+    { type:'event', name:'PixelPirate',    kind:'FOLLOW', desc:'vient de follow la chaîne !' },
     { type:'chat',  name:'SpeedrunSultan', text:'This game is intense monkaS KEKW',        badges: TEST_BADGES, twitchColor:'#9ACD32' },
-    { type:'event', name:'MegaRaider',     kind:'RAID',   desc:'debarque avec 42 viewers !' },
-    { type:'event', name:'GiftKing',       kind:'GIFT',   desc:'offre un sub gift a PixelFox !' },
-    { type:'event', name:'GiftKing',       kind:'CGIFT',  desc:'offre 5 sub gifts a la communaute !' },
-    { type:'event', name:'BitsDude',       kind:'CHEER',  desc:'a envoye 500 bits !' },
+    { type:'event', name:'MegaRaider',     kind:'RAID',   desc:'débarque avec 42 viewers !' },
+    { type:'event', name:'GiftKing',       kind:'GIFT',   desc:'offre un sub gift à PixelFox !' },
+    { type:'event', name:'GiftKing',       kind:'CGIFT',  desc:'offre 5 sub gifts à la communauté !' },
+    { type:'event', name:'BitsDude',       kind:'CHEER',  desc:'a envoyé 500 bits !' },
   ];
   seq.forEach(function(it, i){
     setTimeout(function(){
@@ -314,44 +314,32 @@ window.addEventListener('onEventReceived', function(obj){
 
   /* ---- FOLLOW ---- */
   if (listener === 'follower-latest')
-    addItem({ type:'event', name:evName, kind:'FOLLOW', desc:'vient de follow la chaine !' });
+    addItem({ type:'event', name:evName, kind:'FOLLOW', desc:'vient de follow la chaîne !' });
 
-  /* ----------------------------------------------------------------
-     SUB / RESUB / GIFT / COMMUNITY GIFT
-     Champs SE officiels :
-       data.gifted      {boolean} — true si ce sub est un gift recu
-       data.bulkGifted  {boolean} — true si c'est l'event initial d'un community gift
-       data.sender      {string}  — pseudo du gifter
-       data.name        {string}  — pseudo du receveur (= celui qui sub)
-       data.amount      {number}  — nombre de subs pour un community gift
-       data.months      {number}  — nombre de mois pour un resub
-  ---------------------------------------------------------------- */
+  /* ---- SUB / RESUB / GIFT / COMMUNITY GIFT ---- */
   if (listener === 'subscriber-latest') {
     var isBulk   = data.bulkGifted === true;
     var isGifted = data.gifted === true;
     var sender   = data.sender || '';
 
     if (isBulk) {
-      /* Community gift : sender offre X subs a la communaute */
       var qty = data.amount || 1;
       addItem({ type:'event', name: sender || evName, kind:'CGIFT',
-        desc: 'offre ' + qty + ' sub' + (qty > 1 ? 's' : '') + ' a la communaute !' });
+        desc: 'offre ' + qty + ' sub' + (qty > 1 ? 's' : '') + ' à la communauté !' });
 
     } else if (isGifted) {
-      /* Gift sub simple : sender offre un sub a data.name */
       var recipient = data.name || data.displayName || '';
       addItem({ type:'event', name: sender || evName, kind:'GIFT',
-        desc: recipient ? 'offre un sub gift a ' + recipient + ' !' : 'offre un sub gift !' });
+        desc: recipient ? 'offre un sub gift à ' + recipient + ' !' : 'offre un sub gift !' });
 
     } else {
-      /* Sub classique ou resub */
       var months  = data.months || 1;
       var isResub = months > 1;
       var tierRaw = data.tier || data.subPlan || '';
       var tier    = tierRaw === '3000' ? ' [Tier 3]' : tierRaw === '2000' ? ' [Tier 2]' : '';
       var userMsg = data.message ? ' - "' + data.message + '"' : '';
       var subDesc = isResub
-        ? 'se reabonne pour le ' + months + 'eme mois !' + tier + userMsg
+        ? 'se réabonne pour le ' + months + 'ème mois !' + tier + userMsg
         : "vient de s'abonner !" + tier + userMsg;
       addItem({ type:'event', name: evName, kind: isResub ? 'RESUB' : 'SUB', desc: subDesc });
     }
@@ -360,13 +348,13 @@ window.addEventListener('onEventReceived', function(obj){
   /* ---- CHEER ---- */
   if (listener === 'cheer-latest')
     addItem({ type:'event', name:evName, kind:'CHEER',
-      desc:'a envoye ' + (data.amount || event.amount || '') + ' bits !' });
+      desc:'a envoyé ' + (data.amount || event.amount || '') + ' bits !' });
 
   /* ---- RAID ---- */
   if (listener === 'raid-latest') {
     var viewers = data.amount || data.viewers || event.amount || 0;
     addItem({ type:'event', name:evName, kind:'RAID',
-      desc:'debarque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
+      desc:'débarque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
   }
 
   /* ---- TIP / DON ---- */
