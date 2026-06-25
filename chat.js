@@ -183,7 +183,6 @@ var EVENT_ICONS = {
   TIP:      String.fromCodePoint(0x1F4B8),
 };
 
-/* Convertit un kind interne en label affiche dans la pilule */
 function kindLabel(kind) {
   var labels = {
     SUB:      'SUB',
@@ -202,12 +201,13 @@ function kindLabel(kind) {
   return labels[kind] || kind;
 }
 
-function createEventEl(name, kind, desc) {
+function createEventEl(name, kind, desc, message) {
   var icon = EVENT_ICONS[kind] || String.fromCodePoint(0x2728);
 
   var el = document.createElement('div');
   el.className = 'item event';
 
+  /* --- topline --- */
   var topline = document.createElement('div');
   topline.className = 'topline';
 
@@ -236,27 +236,37 @@ function createEventEl(name, kind, desc) {
   }
 
   el.appendChild(topline);
+
+  /* --- bulle message sub --- */
+  if (message && message.trim()) {
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = parseTestEmotes(message);
+    el.appendChild(bubble);
+  }
+
   return el;
 }
 
 /* ---- AJOUT ITEM + SCROLL ---- */
 function addItem(opts) {
-  var type   = opts.type   || 'chat';
-  var name   = opts.name   || 'viewer';
-  var desc   = opts.desc   || '';
-  var text   = opts.text   || '';
-  var badges = opts.badges || [];
-  var color  = opts.color  || 'inherit';
-  var alt    = opts.alt    || false;
-  var kind   = opts.kind   || '';
-  var data   = opts.data   || null;
-  var isTest = opts.isTest || false;
+  var type    = opts.type    || 'chat';
+  var name    = opts.name    || 'viewer';
+  var desc    = opts.desc    || '';
+  var text    = opts.text    || '';
+  var message = opts.message || '';
+  var badges  = opts.badges  || [];
+  var color   = opts.color   || 'inherit';
+  var alt     = opts.alt     || false;
+  var kind    = opts.kind    || '';
+  var data    = opts.data    || null;
+  var isTest  = opts.isTest  || false;
 
   var feed = document.getElementById('feed');
   var el;
 
   if (type === 'event') {
-    el = createEventEl(name, kind, desc);
+    el = createEventEl(name, kind, desc, message);
   } else {
     el = document.createElement('div');
     el.className = 'item' + (alt ? ' alt' : '');
@@ -281,22 +291,21 @@ function testSequence(){
     { url: 'https://static-cdn.jtvnw.net/badges/v1/963b2afc-d913-41ab-b07d-67f74854c710/1' }
   ];
   var seq = [
-    { type:'chat',  name:'HS_Hero',        text:"I'm dying of laughter Kappa LUL PogChamp", badges: TEST_BADGES, twitchColor:'#FF4500' },
-    { type:'event', name:'ApexAce',        kind:'SUB',      desc:"vient de s'abonner !" },
-    { type:'event', name:'NightOwl',       kind:'SUB_T2',   desc:"vient de s'abonner [Tier 2] !" },
-    { type:'event', name:'LegendPro',      kind:'SUB_T3',   desc:"vient de s'abonner [Tier 3] !" },
-    { type:'chat',  name:'RocketRacer',    text:'So close! BibleThump ResidentSleeper', badges: TEST_BADGES, twitchColor:'#1E90FF' },
-    { type:'event', name:'PixelPirate',    kind:'FOLLOW',   desc:'vient de follow la chaîne !' },
-    { type:'chat',  name:'SpeedrunSultan', text:'This game is intense monkaS KEKW', badges: TEST_BADGES, twitchColor:'#9ACD32' },
-    { type:'event', name:'MegaRaider',     kind:'RAID',     desc:'débarque avec 42 viewers !' },
-    { type:'event', name:'GiftKing',       kind:'GIFT',     desc:'offre un sub gift à PixelFox !' },
-    { type:'event', name:'GiftKing',       kind:'CGIFT',    desc:'offre 5 sub gifts à la communauté !' },
-    { type:'event', name:'BitsDude',       kind:'CHEER',    desc:'a envoyé 500 bits !' },
+    { type:'chat',  name:'HS_Hero',        text:"I'm dying of laughter Kappa LUL", badges: TEST_BADGES, twitchColor:'#FF4500' },
+    { type:'event', name:'ApexAce',        kind:'SUB',    desc:"vient de s'abonner !",           message:'' },
+    { type:'event', name:'NightOwl',       kind:'RESUB',  desc:'se réabonne pour le 6ème mois !', message:'Toujours là pour le stream PogChamp' },
+    { type:'event', name:'LegendPro',      kind:'SUB_T3', desc:"vient de s'abonner [Tier 3] !",  message:'Le meilleur stream Kappa' },
+    { type:'chat',  name:'RocketRacer',    text:'So close! BibleThump',            badges: TEST_BADGES, twitchColor:'#1E90FF' },
+    { type:'event', name:'PixelPirate',    kind:'FOLLOW', desc:'vient de follow la chaîne !' },
+    { type:'event', name:'GiftKing',       kind:'GIFT',   desc:'offre un sub gift à PixelFox !' },
+    { type:'event', name:'GiftKing',       kind:'CGIFT',  desc:'offre 5 sub gifts à la communauté !' },
+    { type:'event', name:'BitsDude',       kind:'CHEER',  desc:'a envoyé 500 bits !' },
   ];
   seq.forEach(function(it, i){
     setTimeout(function(){
       var color = resolveNameColor(it.twitchColor || '');
       addItem({ type:it.type, name:it.name, kind:it.kind||'', desc:it.desc||'',
+                message: it.message || '',
                 color:color, alt: i % 2 === 1,
                 data:{ text: it.text || '' }, badges: it.badges||[], isTest:true });
     }, i * 800);
@@ -349,6 +358,7 @@ window.addEventListener('onEventReceived', function(obj){
     var tierRaw  = data.tier || data.subPlan || '';
     var tierSuffix = tierRaw === '3000' ? '_T3' : tierRaw === '2000' ? '_T2' : '';
     var tierLabel  = tierRaw === '3000' ? ' [Tier 3]' : tierRaw === '2000' ? ' [Tier 2]' : '';
+    var subMsg   = data.message || '';
 
     if (isBulk) {
       var qty = data.amount || 1;
@@ -363,13 +373,12 @@ window.addEventListener('onEventReceived', function(obj){
     } else {
       var months  = data.months || 1;
       var isResub = months > 1;
-      var userMsg = data.message ? ' - "' + data.message + '"' : '';
       var baseKind = isResub ? 'RESUB' : 'SUB';
       var kind = baseKind + tierSuffix;
       var subDesc = isResub
-        ? 'se réabonne pour le ' + months + 'ème mois !' + tierLabel + userMsg
-        : "vient de s'abonner !" + tierLabel + userMsg;
-      addItem({ type:'event', name: evName, kind: kind, desc: subDesc });
+        ? 'se réabonne pour le ' + months + 'ème mois !' + tierLabel
+        : "vient de s'abonner !" + tierLabel;
+      addItem({ type:'event', name: evName, kind: kind, desc: subDesc, message: subMsg });
     }
   }
 
@@ -389,8 +398,9 @@ window.addEventListener('onEventReceived', function(obj){
   if (listener === 'tip-latest') {
     var tipAmount = data.amount || event.amount || '';
     var currency  = data.currency || event.currency || 'EUR';
-    var tipMsg    = data.message ? ' - "' + data.message + '"' : '';
+    var tipMsg    = data.message || '';
     addItem({ type:'event', name:evName, kind:'TIP',
-      desc:'a fait un don de ' + tipAmount + ' ' + currency + ' !' + tipMsg });
+      desc:'a fait un don de ' + tipAmount + ' ' + currency + ' !',
+      message: tipMsg });
   }
 });
