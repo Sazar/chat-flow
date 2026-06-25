@@ -1,6 +1,7 @@
 let fd = {};
 let maxItems = 11;
 let thirdPartyEmotes = {};
+let widgetLoaded = false;
 
 function esc(s){
   return String(s ?? '').replace(/[&<>"']/g, m => ({
@@ -31,13 +32,11 @@ function applyThemeVars(){
 
   var t = themes[theme] || themes.monster;
   var useCustom = !!fd.useNameBarColor;
-
   var finalNameBg   = useCustom && fd.nameBg   ? fd.nameBg   : t.nameBg;
   var finalNameText = useCustom && fd.nameText ? fd.nameText : t.nameText;
 
   w.style.setProperty('--name-bg',   finalNameBg);
   w.style.setProperty('--name-text', finalNameText);
-
   root.style.setProperty('--bubble-bg',   t.bubbleBg);
   root.style.setProperty('--bubble-bg-2', t.bubbleBg2);
   root.style.setProperty('--bubble-text', t.bubbleText);
@@ -185,29 +184,19 @@ var EVENT_ICONS = {
 
 function kindLabel(kind) {
   var labels = {
-    SUB:      'SUB',
-    SUB_T2:   'SUB T2',
-    SUB_T3:   'SUB T3',
-    RESUB:    'RESUB',
-    RESUB_T2: 'RESUB T2',
-    RESUB_T3: 'RESUB T3',
-    FOLLOW:   'FOLLOW',
-    GIFT:     'GIFT',
-    CGIFT:    'GIFT',
-    CHEER:    'CHEER',
-    RAID:     'RAID',
-    TIP:      'TIP',
+    SUB:'SUB', SUB_T2:'SUB T2', SUB_T3:'SUB T3',
+    RESUB:'RESUB', RESUB_T2:'RESUB T2', RESUB_T3:'RESUB T3',
+    FOLLOW:'FOLLOW', GIFT:'GIFT', CGIFT:'GIFT',
+    CHEER:'CHEER', RAID:'RAID', TIP:'TIP',
   };
   return labels[kind] || kind;
 }
 
-function createEventEl(name, kind, desc, message) {
+function createEventEl(name, kind, desc, message, isTest) {
   var icon = EVENT_ICONS[kind] || String.fromCodePoint(0x2728);
-
   var el = document.createElement('div');
   el.className = 'item event';
 
-  /* --- topline --- */
   var topline = document.createElement('div');
   topline.className = 'topline';
 
@@ -237,11 +226,13 @@ function createEventEl(name, kind, desc, message) {
 
   el.appendChild(topline);
 
-  /* --- bulle message sub --- */
+  /* bulle message sub/resub/tip */
   if (message && message.trim()) {
     var bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.innerHTML = parseTestEmotes(message);
+    bubble.innerHTML = isTest
+      ? parseTestEmotes(message)
+      : injectThirdParty(esc(message).replace(/\n/g,'<br>'));
     el.appendChild(bubble);
   }
 
@@ -266,7 +257,7 @@ function addItem(opts) {
   var el;
 
   if (type === 'event') {
-    el = createEventEl(name, kind, desc, message);
+    el = createEventEl(name, kind, desc, message, isTest);
   } else {
     el = document.createElement('div');
     el.className = 'item' + (alt ? ' alt' : '');
@@ -291,35 +282,50 @@ function testSequence(){
     { url: 'https://static-cdn.jtvnw.net/badges/v1/963b2afc-d913-41ab-b07d-67f74854c710/1' }
   ];
   var seq = [
-    { type:'chat',  name:'HS_Hero',        text:"I'm dying of laughter Kappa LUL", badges: TEST_BADGES, twitchColor:'#FF4500' },
-    { type:'event', name:'ApexAce',        kind:'SUB',    desc:"vient de s'abonner !",           message:'' },
-    { type:'event', name:'NightOwl',       kind:'RESUB',  desc:'se réabonne pour le 6ème mois !', message:'Toujours là pour le stream PogChamp' },
-    { type:'event', name:'LegendPro',      kind:'SUB_T3', desc:"vient de s'abonner [Tier 3] !",  message:'Le meilleur stream Kappa' },
-    { type:'chat',  name:'RocketRacer',    text:'So close! BibleThump',            badges: TEST_BADGES, twitchColor:'#1E90FF' },
-    { type:'event', name:'PixelPirate',    kind:'FOLLOW', desc:'vient de follow la chaîne !' },
-    { type:'event', name:'GiftKing',       kind:'GIFT',   desc:'offre un sub gift à PixelFox !' },
-    { type:'event', name:'GiftKing',       kind:'CGIFT',  desc:'offre 5 sub gifts à la communauté !' },
-    { type:'event', name:'BitsDude',       kind:'CHEER',  desc:'a envoyé 500 bits !' },
+    { type:'chat',  name:'HS_Hero',     text:"I'm dying of laughter Kappa LUL", badges:TEST_BADGES, twitchColor:'#FF4500' },
+    { type:'event', name:'ApexAce',     kind:'SUB',    desc:"vient de s'abonner !",            message:'' },
+    { type:'event', name:'NightOwl',    kind:'RESUB',  desc:'se réabonne pour le 6ème mois !',  message:'Toujours là pour le stream PogChamp' },
+    { type:'event', name:'LegendPro',   kind:'SUB_T3', desc:"vient de s'abonner [Tier 3] !",   message:'Le meilleur stream Kappa' },
+    { type:'chat',  name:'RocketRacer', text:'So close! BibleThump',             badges:TEST_BADGES, twitchColor:'#1E90FF' },
+    { type:'event', name:'PixelPirate', kind:'FOLLOW', desc:'vient de follow la chaîne !' },
+    { type:'event', name:'GiftKing',    kind:'GIFT',   desc:'offre un sub gift à PixelFox !' },
+    { type:'event', name:'GiftKing',    kind:'CGIFT',  desc:'offre 5 sub gifts à la communauté !' },
+    { type:'event', name:'BitsDude',    kind:'CHEER',  desc:'a envoyé 500 bits !' },
+    { type:'event', name:'TipGuy',      kind:'TIP',    desc:'a fait un don de 10 EUR !', message:'Super stream continue comme ça !' },
   ];
   seq.forEach(function(it, i){
     setTimeout(function(){
-      var color = resolveNameColor(it.twitchColor || '');
-      addItem({ type:it.type, name:it.name, kind:it.kind||'', desc:it.desc||'',
-                message: it.message || '',
-                color:color, alt: i % 2 === 1,
-                data:{ text: it.text || '' }, badges: it.badges||[], isTest:true });
-    }, i * 800);
+      addItem({
+        type:it.type, name:it.name, kind:it.kind||'', desc:it.desc||'',
+        message: it.message || '',
+        color: resolveNameColor(it.twitchColor || ''),
+        alt: i % 2 === 1,
+        data:{ text: it.text || '' }, badges: it.badges||[], isTest:true
+      });
+    }, i * 900);
   });
 }
 
 /* ---- STREAMELEMENTS ---- */
 window.addEventListener('onWidgetLoad', function(obj){
+  widgetLoaded = true;
   fd = (obj.detail && obj.detail.fieldData) || {};
   maxItems = Math.max(1, parseInt(fd.maxItems || 11, 10));
   applyThemeVars();
   var ch = obj.detail && obj.detail.channel;
   if (ch && ch.providerId) loadThirdPartyEmotes(ch.providerId);
+  /* test uniquement si active dans les options SE */
   if (fd.testMessages) setTimeout(testSequence, 300);
+});
+
+/* Lance le test auto si on ouvre le fichier directement (hors SE) */
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    if (!widgetLoaded) {
+      applyThemeVars();
+      testSequence();
+    }
+  }, 500);
 });
 
 window.addEventListener('onEventReceived', function(obj){
@@ -331,15 +337,13 @@ window.addEventListener('onEventReceived', function(obj){
   if (listener === 'message') {
     if (fd.hideCommands && String(data.text || '').startsWith('!')) return;
     var twitchColor = (fd.useTwitchColor === true)
-      ? (data.displayColor || data.color || '')
-      : '';
+      ? (data.displayColor || data.color || '') : '';
     addItem({
-      type:   'chat',
-      name:   data.displayName || data.nick || data.name || 'viewer',
+      type:'chat',
+      name: data.displayName || data.nick || data.name || 'viewer',
       badges: data.badges || [],
-      color:  resolveNameColor(twitchColor),
-      data:   data,
-      isTest: false
+      color: resolveNameColor(twitchColor),
+      data: data, isTest: false
     });
     return;
   }
@@ -364,21 +368,18 @@ window.addEventListener('onEventReceived', function(obj){
       var qty = data.amount || 1;
       addItem({ type:'event', name: sender || evName, kind:'CGIFT',
         desc: 'offre ' + qty + ' sub' + (qty > 1 ? 's' : '') + ' à la communauté !' });
-
     } else if (isGifted) {
       var recipient = data.name || data.displayName || '';
       addItem({ type:'event', name: sender || evName, kind:'GIFT',
         desc: recipient ? 'offre un sub gift à ' + recipient + ' !' : 'offre un sub gift !' });
-
     } else {
       var months  = data.months || 1;
       var isResub = months > 1;
-      var baseKind = isResub ? 'RESUB' : 'SUB';
-      var kind = baseKind + tierSuffix;
+      var kind = (isResub ? 'RESUB' : 'SUB') + tierSuffix;
       var subDesc = isResub
         ? 'se réabonne pour le ' + months + 'ème mois !' + tierLabel
         : "vient de s'abonner !" + tierLabel;
-      addItem({ type:'event', name: evName, kind: kind, desc: subDesc, message: subMsg });
+      addItem({ type:'event', name:evName, kind:kind, desc:subDesc, message:subMsg });
     }
   }
 
@@ -398,9 +399,8 @@ window.addEventListener('onEventReceived', function(obj){
   if (listener === 'tip-latest') {
     var tipAmount = data.amount || event.amount || '';
     var currency  = data.currency || event.currency || 'EUR';
-    var tipMsg    = data.message || '';
     addItem({ type:'event', name:evName, kind:'TIP',
       desc:'a fait un don de ' + tipAmount + ' ' + currency + ' !',
-      message: tipMsg });
+      message: data.message || '' });
   }
 });
