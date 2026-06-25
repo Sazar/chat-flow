@@ -98,13 +98,11 @@ function renderFromPositions(text, emotes, getUrl){
 /* ---- EMOTES 3RD PARTY (7TV / BTTV / FFZ) ---- */
 async function loadThirdPartyEmotes(channelId){
   if (!channelId) return;
-  // 7TV
   try {
     const r = await fetch(`https://7tv.io/v3/users/twitch/${channelId}`);
     if (r.ok) {
       const d = await r.json();
-      const emotes = d?.emote_set?.emotes || [];
-      emotes.forEach(e => {
+      (d?.emote_set?.emotes || []).forEach(e => {
         if (!e.name || !e.data?.host?.url) return;
         const files = e.data.host.files || [];
         const f = files.find(x => x.name === '1x.webp') || files[0];
@@ -112,7 +110,6 @@ async function loadThirdPartyEmotes(channelId){
       });
     }
   } catch(_){}
-  // BetterTTV
   try {
     const r = await fetch(`https://api.betterttv.net/3/cached/users/twitch/${channelId}`);
     if (r.ok) {
@@ -122,7 +119,6 @@ async function loadThirdPartyEmotes(channelId){
       });
     }
   } catch(_){}
-  // FrankerFaceZ
   try {
     const r = await fetch(`https://api.frankerfacez.com/v1/room/id/${channelId}`);
     if (r.ok) {
@@ -138,7 +134,6 @@ async function loadThirdPartyEmotes(channelId){
 
 /* ---- RENDU TEXTE ---- */
 function injectThirdParty(html){
-  // remplace les tokens texte par les emotes 3rd party si disponibles
   return html.replace(/([^<>\s]+)/g, tok => {
     if (thirdPartyEmotes[tok])
       return `<img class="emote" src="${esc(thirdPartyEmotes[tok])}" alt="${esc(tok)}" onerror="this.remove()">`;
@@ -162,43 +157,66 @@ function parseTestEmotes(text){
 function renderText(data, isTest = false){
   const rawText = String(data.text || data.messageRaw || data.message?.text || '');
   if (isTest) return parseTestEmotes(rawText);
-
   const fromDirect = renderFromPositions(rawText, data?.emotes, em => {
     if (em.urls) return em.urls['2'] || em.urls['1'] || em.urls['4'] || Object.values(em.urls)[0] || '';
     if (em.id)   return `https://static-cdn.jtvnw.net/emoticons/v2/${em.id}/default/dark/3.0`;
     return '';
   });
   if (fromDirect) return injectThirdParty(fromDirect);
-
   const fromFragments = renderFragments(data.message || data);
   if (fromFragments) return injectThirdParty(fromFragments);
-
   return injectThirdParty(esc(rawText).replace(/\n/g,'<br>'));
 }
 
-/* ---- ICÔNE ÉVÉNEMENT ---- */
-function eventMark(){
-  return '<span class="event-mark event-big"></span><span class="event-stack"><span class="event-mark event-sm event-top"></span><span class="event-mark event-sm event-bottom"></span></span>';
-}
+/* ---- ICÔNES ÉVÉNEMENTS ---- */
+const EVENT_ICONS = {
+  FOLLOW:  '🩷',
+  SUB:     '⭐',
+  RESUB:   '⭐',
+  GIFT:    '🎁',
+  CHEER:   '💎',
+  RAID:    '⚔️',
+  TIP:     '💸',
+};
 
 /* ---- AJOUT ITEM + SCROLL ---- */
-function addItem({type='chat', name='viewer', text='', badges=[], color='', alt=false, kind='', data=null, isTest=false}) {
+/*
+  type  : 'chat' | 'event'
+  name  : pseudo affiché
+  desc  : texte descriptif affiché dans la bulle (events uniquement)
+  kind  : clé de EVENT_ICONS
+  text  : texte brut du message (chat uniquement, pour renderText)
+  badges, color, alt, data, isTest
+*/
+function addItem({type='chat', name='viewer', desc='', text='', badges=[], color='', alt=false, kind='', data=null, isTest=false}) {
   const feed = document.getElementById('feed');
   const el   = document.createElement('div');
-  el.className = `item ${type === 'event' ? 'event' : ''} ${alt ? 'alt' : ''}`;
-  const body  = renderText(data || { text }, isTest);
+  el.className = `item ${type === 'event' ? 'event' : ''} ${alt ? 'alt' : ''}`.trim();
   const nameColor = color || 'inherit';
+  const icon = EVENT_ICONS[kind] || '✨';
 
-  el.innerHTML = type === 'event'
-    ? `<div class="topline"><span class="icon">${eventMark()}</span><span class="name" style="color:${esc(nameColor)}">${esc(name)}</span><span class="kind">${esc(kind)}</span></div>`
-    : `<div class="topline"><span class="name" style="color:${esc(nameColor)}">${esc(name)}</span><span class="badges">${badgeIcons(badges)}</span></div><div class="bubble">${body}</div>`;
+  if (type === 'event') {
+    // Topline : icône + pseudo + badge type
+    // Bulle : texte descriptif de l'event
+    el.innerHTML =
+      `<div class="topline">
+        <span class="ev-icon">${icon}</span>
+        <span class="name" style="color:${esc(nameColor)}">${esc(name)}</span>
+        <span class="kind">${esc(kind)}</span>
+      </div>
+      <div class="bubble ev-bubble">${esc(desc)}</div>`;
+  } else {
+    const body = renderText(data || { text }, isTest);
+    el.innerHTML =
+      `<div class="topline">
+        <span class="name" style="color:${esc(nameColor)}">${esc(name)}</span>
+        <span class="badges">${badgeIcons(badges)}</span>
+      </div>
+      <div class="bubble">${body}</div>`;
+  }
 
   feed.appendChild(el);
-
-  // Limite le nombre de messages
   while (feed.children.length > maxItems) feed.removeChild(feed.firstElementChild);
-
-  // Scroll automatique vers le bas
   el.scrollIntoView({ behavior: 'smooth', block: 'end' });
 }
 
@@ -210,16 +228,18 @@ function testSequence(){
   ];
   const nameColor = fd.nameText || '#111';
   const seq = [
-    { type:'chat',  name:'HS_Hero',          text:"I'm dying of laughter Kappa LUL PogChamp", badges: TEST_BADGES },
-    { type:'event', name:'ApexAce',           text:'new subscriber!',                           kind:'SUB'   },
-    { type:'chat',  name:'RocketRacer',       text:'So close! BibleThump ResidentSleeper',      badges: TEST_BADGES },
-    { type:'event', name:'PixelPirate',       text:'a follow',                                  kind:'FOLLOW'},
-    { type:'chat',  name:'SpeedrunSultan',    text:'This game is intense monkaS KEKW',          badges: TEST_BADGES },
-    { type:'event', name:'OverwatchOutlaw',   text:'raid avec 12',                              kind:'RAID'  }
+    { type:'chat',  name:'HS_Hero',        text:"I'm dying of laughter Kappa LUL PogChamp",   badges: TEST_BADGES },
+    { type:'event', name:'ApexAce',        kind:'SUB',    desc:"vient de s'abonner !"                        },
+    { type:'chat',  name:'RocketRacer',    text:'So close! BibleThump ResidentSleeper',         badges: TEST_BADGES },
+    { type:'event', name:'PixelPirate',    kind:'FOLLOW', desc:'vient de follow la chaîne !'                },
+    { type:'chat',  name:'SpeedrunSultan', text:'This game is intense monkaS KEKW',             badges: TEST_BADGES },
+    { type:'event', name:'MegaRaider',     kind:'RAID',   desc:'débarque avec 42 viewers !'                 },
+    { type:'event', name:'GiftKing',       kind:'GIFT',   desc:'offre 5 abonnements à la communauté !'      },
+    { type:'event', name:'BitsDude',       kind:'CHEER',  desc:'a envoyé 500 bits !'                        },
   ];
   seq.forEach((it, i) => setTimeout(() => {
-    addItem({ ...it, color: nameColor, alt: i % 2 === 1, data: { text: it.text }, isTest: true });
-  }, i * 750));
+    addItem({ ...it, color: nameColor, alt: i % 2 === 1, data: { text: it.text || '' }, isTest: true });
+  }, i * 800));
 }
 
 /* ---- STREAMELEMENTS EVENTS ---- */
@@ -227,11 +247,8 @@ window.addEventListener('onWidgetLoad', obj => {
   fd = obj.detail.fieldData || {};
   maxItems = Math.max(1, parseInt(fd.maxItems || 11, 10));
   applyThemeVars();
-
-  // Charge les emotes 3rd party via l'ID de chaîne SE
   const ch = obj.detail.channel;
   if (ch?.providerId) loadThirdPartyEmotes(ch.providerId);
-
   if (fd.testMessages) setTimeout(testSequence, 300);
 });
 
@@ -241,10 +258,11 @@ window.addEventListener('onEventReceived', obj => {
   const data     = event.data || event;
   const nameColor = data.displayColor || data.color || fd.nameText || 'inherit';
 
+  /* --- Messages chat --- */
   if (listener === 'message') {
     if (fd.hideCommands && String(data.text || '').startsWith('!')) return;
     addItem({
-      type: 'chat',
+      type:   'chat',
       name:   data.displayName || data.nick || data.name || 'viewer',
       badges: data.badges || [],
       color:  nameColor,
@@ -256,9 +274,55 @@ window.addEventListener('onEventReceived', obj => {
 
   const evName  = event.name || data.displayName || data.name || 'Someone';
   const evColor = fd.nameText || 'inherit';
-  if (listener === 'follower-latest')   addItem({ type:'event', name:evName, kind:'FOLLOW', color:evColor, data:{ text:'' } });
-  if (listener === 'subscriber-latest') addItem({ type:'event', name:evName, kind:'SUB',    color:evColor, data:{ text:'' } });
-  if (listener === 'cheer-latest')      addItem({ type:'event', name:evName, kind:`CHEER ${event.amount||''}`,  color:evColor, data:{ text:'' } });
-  if (listener === 'raid-latest')       addItem({ type:'event', name:evName, kind:`RAID ${event.amount||''}`,   color:evColor, data:{ text:'' } });
-  if (listener === 'tip-latest')        addItem({ type:'event', name:evName, kind:`TIP ${event.amount||''}${event.currency||''}`, color:evColor, data:{ text:'' } });
+
+  /* --- Follow --- */
+  if (listener === 'follower-latest') {
+    addItem({ type:'event', name:evName, kind:'FOLLOW', color:evColor,
+      desc: 'vient de follow la chaîne !' });
+  }
+
+  /* --- Sub / Resub --- */
+  if (listener === 'subscriber-latest') {
+    const months = data.months || data.streak || data.amount || 1;
+    const isResub = months > 1;
+    const tierRaw = data.tier || data.subPlan || '';
+    const tier = tierRaw === '3000' ? ' [Tier 3 👑]' : tierRaw === '2000' ? ' [Tier 2 ⭐]' : '';
+    const userMsg = data.message ? ` — "${data.message}"` : '';
+    const desc = isResub
+      ? `se réabonne pour le ${months}ème mois !${tier}${userMsg}`
+      : `vient de s'abonner !${tier}${userMsg}`;
+    addItem({ type:'event', name:evName, kind: isResub ? 'RESUB' : 'SUB', color:evColor, desc });
+  }
+
+  /* --- Gift sub --- */
+  if (listener === 'subgift-latest') {
+    const recipient = data.recipient || data.recipientDisplayName || '';
+    const desc = recipient
+      ? `offre un abonnement à ${recipient} !`
+      : 'offre un abonnement à la communauté !';
+    addItem({ type:'event', name:evName, kind:'GIFT', color:evColor, desc });
+  }
+
+  /* --- Cheer / Bits --- */
+  if (listener === 'cheer-latest') {
+    const amount = data.amount || event.amount || '';
+    addItem({ type:'event', name:evName, kind:'CHEER', color:evColor,
+      desc: `a envoyé ${amount} bits !` });
+  }
+
+  /* --- Raid --- */
+  if (listener === 'raid-latest') {
+    const viewers = data.amount || data.viewers || event.amount || '';
+    addItem({ type:'event', name:evName, kind:'RAID', color:evColor,
+      desc: `débarque avec ${viewers} viewer${viewers > 1 ? 's' : ''} !` });
+  }
+
+  /* --- Tip / Don --- */
+  if (listener === 'tip-latest') {
+    const amount   = data.amount || event.amount || '';
+    const currency = data.currency || event.currency || '€';
+    const userMsg  = data.message ? ` — "${data.message}"` : '';
+    addItem({ type:'event', name:evName, kind:'TIP', color:evColor,
+      desc: `a fait un don de ${amount} ${currency} !${userMsg}` });
+  }
 });
