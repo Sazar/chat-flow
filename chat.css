@@ -80,7 +80,6 @@ html, body{
 }
 
 /* ---- EVENT ---- */
-/* Largeur : colle au contenu comme le chat, pas pleine largeur */
 .item.event{
   width:fit-content;
   max-width:100%;
@@ -91,10 +90,9 @@ html, body{
   align-items:center;
   gap:9px;
   background:var(--name-bg); color:var(--name-text);
-  /* Padding vertical genereux pour la hauteur, horizontal serré */
-  padding:14px 16px;
-  border-radius:12px;
-  font-size:16px;
+  padding:20px 16px;
+  border-radius:14px;
+  font-size:17px;
   font-weight:800;
   line-height:1.2;
   box-shadow:var(--shadow);
@@ -102,7 +100,7 @@ html, body{
 }
 
 .item.event .ev-icon{
-  font-size:19px; line-height:1; flex:0 0 auto;
+  font-size:21px; line-height:1; flex:0 0 auto;
 }
 
 .item.event .ev-name{
@@ -120,7 +118,7 @@ html, body{
   font-weight:800;
   letter-spacing:.07em;
   text-transform:uppercase;
-  padding:4px 9px;
+  padding:5px 10px;
   border-radius:999px;
   background:rgba(0,0,0,.18);
   line-height:1;
