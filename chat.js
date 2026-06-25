@@ -283,7 +283,7 @@ function testSequence(){
   var seq = [
     { type:'chat',  name:'HS_Hero',     text:"I'm dying of laughter Kappa LUL", badges:TEST_BADGES, twitchColor:'#FF4500' },
     { type:'event', name:'ApexAce',     kind:'SUB',    desc:"s'abonne pour le 1er mois !" },
-    { type:'event', name:'NightOwl',    kind:'RESUB',  desc:'se réabonne pour le 6ème mois !',  message:'Toujours là PogChamp' },
+    { type:'event', name:'NightOwl',    kind:'RESUB',  desc:'se réabonne pour le 6ème mois !', message:'Toujours là PogChamp' },
     { type:'event', name:'LegendPro',   kind:'SUB_T3', desc:"s'abonne pour le 1er mois [Tier 3] !", message:'Le meilleur stream Kappa' },
     { type:'chat',  name:'RocketRacer', text:'So close! BibleThump', badges:TEST_BADGES, twitchColor:'#1E90FF' },
     { type:'event', name:'PixelPirate', kind:'FOLLOW', desc:'vient de follow la chaîne !' },
@@ -330,6 +330,9 @@ window.addEventListener('onEventReceived', function(obj){
   var event    = (obj.detail.event) || {};
   var data     = event.data || event;
 
+  /* DEBUG - retire ce bloc apres verification */
+  console.log('[ChatFlow] listener:', listener, '| data:', JSON.stringify(data));
+
   if (listener === 'message') {
     if (fd.hideCommands && String(data.text || '').startsWith('!')) return;
     var twitchColor = (fd.useTwitchColor === true)
@@ -367,12 +370,16 @@ window.addEventListener('onEventReceived', function(obj){
       addItem({ type:'event', name: sender || evName, kind:'GIFT',
         desc: recipient ? 'offre un sub gift à ' + recipient + ' !' : 'offre un sub gift !' });
     } else {
-      var months  = data.months || 1;
+      /*
+       * SE peut envoyer le nombre de mois dans differents champs selon la version :
+       * data.months, data.amount, data.streak, ou event.amount
+       */
+      var months = parseInt(data.months || data.streak || data.amount || event.amount || 1, 10);
+      if (isNaN(months) || months < 1) months = 1;
       var isResub = months > 1;
       var kind    = (isResub ? 'RESUB' : 'SUB') + tierSuffix;
-      /* Toujours afficher le nombre de mois */
       var monthStr = months === 1
-        ? 's\'abonne pour le 1er mois'
+        ? "s'abonne pour le 1er mois"
         : 'se réabonne pour le ' + months + 'ème mois';
       var subDesc = monthStr + tierLabel + ' !';
       addItem({ type:'event', name:evName, kind:kind, desc:subDesc, message:subMsg });
