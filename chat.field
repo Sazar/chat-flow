@@ -16,10 +16,14 @@
     "value": "slide",
     "options": {
       "slide": "Slide — glisse depuis le bas",
-      "pop": "Pop — appara\u00eet en agrandissant",
+      "pop": "Pop — apparaît en agrandissant",
       "bounce": "Bounce — rebond",
       "flip": "Flip — rotation 3D",
-      "glow": "Glow — flash lumineux"
+      "glow": "Glow — flash lumineux",
+      "zoomleft": "Zoom Left — arrive de la gauche",
+      "swing": "Swing — léger balancement",
+      "stamp": "Stamp — impact rapide",
+      "wave": "Wave — flottement doux"
     }
   },
   "useNameBarColor": {
@@ -39,8 +43,13 @@
   },
   "highlightMentions": {
     "type": "checkbox",
-    "label": "Highlight @mentions (contour dor\u00e9)",
+    "label": "Highlight @mentions (contour doré)",
     "value": true
+  },
+  "mentionTarget": {
+    "type": "text",
+    "label": "Pseudo Twitch à highlight (sans @)",
+    "value": ""
   },
   "nameBg": {
     "type": "colorpicker",
@@ -67,7 +76,7 @@
   },
   "maxItems": {
     "type": "slider",
-    "label": "Nombre max de messages affich\u00e9s",
+    "label": "Nombre max de messages affichés",
     "value": 11,
     "min": 1,
     "max": 50,

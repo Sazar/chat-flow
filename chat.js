@@ -4,9 +4,7 @@ let thirdPartyEmotes = {};
 let widgetLoaded = false;
 
 function esc(s){
-  return String(s ?? '').replace(/[&<>"']/g, m => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[m]));
+  return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
 
 function resolveNameColor(twitchColor) {
@@ -16,7 +14,7 @@ function resolveNameColor(twitchColor) {
 
 function getEventAnimClass(){
   var anim = String(fd.eventAnim || 'slide').toLowerCase();
-  var valid = ['slide','pop','bounce','flip','glow'];
+  var valid = ['slide','pop','bounce','flip','glow','zoomleft','swing','stamp','wave'];
   return 'anim-' + (valid.includes(anim) ? anim : 'slide');
 }
 
@@ -42,7 +40,6 @@ function applyThemeVars(){
   root.style.setProperty('--bubble-text', t.bubbleText);
 }
 
-/* ---- BADGES ---- */
 function badgeIcons(badges){
   if (!Array.isArray(badges)) return '';
   return badges.map(function(b){
@@ -51,7 +48,6 @@ function badgeIcons(badges){
   }).join('');
 }
 
-/* ---- EMOTES TWITCH ---- */
 function emoteUrlFromFragment(fragment){
   var id = fragment && fragment.emote && fragment.emote.id;
   if (!id) return '';
@@ -89,7 +85,6 @@ function renderFromPositions(text, emotes, getUrl){
   return out.replace(/\n/g,'<br>');
 }
 
-/* ---- EMOTES 3RD PARTY ---- */
 async function loadThirdPartyEmotes(channelId){
   if(!channelId) return;
   try{
@@ -125,32 +120,38 @@ function parseTestEmotes(text){
   var tokens=[['Kappa','25'],['LUL','425618'],['PogChamp','88'],['BibleThump','33'],['ResidentSleeper','245'],['monkaS','200607'],['KEKW','62835']];
   var out=esc(String(text||''));
   tokens.forEach(function(p){
-    out=out.replace(new RegExp('\\b'+p[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','g'),
-      '<img class="emote" src="https://static-cdn.jtvnw.net/emoticons/v2/'+p[1]+'/default/dark/3.0" alt="'+p[0]+'" onerror="this.remove()">');
+    out=out.replace(new RegExp('\\b'+p[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','g'), '<img class="emote" src="https://static-cdn.jtvnw.net/emoticons/v2/'+p[1]+'/default/dark/3.0" alt="'+p[0]+'" onerror="this.remove()">');
   });
   return out.replace(/\n/g,'<br>');
 }
 
-/* ---- MENTIONS ---- */
-function hasMention(text){
-  return /@\w+/.test(String(text||''));
+function normalizeMentionTarget(){
+  return String(fd.mentionTarget || '').trim().replace(/^@+/, '').toLowerCase();
+}
+function shouldHighlightMessage(text){
+  if (fd.highlightMentions === false) return false;
+  var target = normalizeMentionTarget();
+  if (!target) return false;
+  return new RegExp('(^|[^\\w])@' + target.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?=$|[^\\w])','i').test(String(text || ''));
 }
 function highlightMentionText(html){
-  return html.replace(/@(\w+)/g,'<span class="mention-tag">@$1</span>');
+  var target = normalizeMentionTarget();
+  if (!target) return html;
+  var re = new RegExp('@(' + target.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')','ig');
+  return html.replace(re,'<span class="mention-tag">@$1</span>');
 }
 
 function renderText(data, isTest, applyMentionHighlight){
   var rawText=String(data.text||data.messageRaw||(data.message&&data.message.text)||'');
   var html;
-  if(isTest){
-    html = parseTestEmotes(rawText);
-  } else {
+  if(isTest){ html = parseTestEmotes(rawText); }
+  else {
     var fromDirect=renderFromPositions(rawText,data&&data.emotes,function(em){
       if(em.urls) return em.urls['2']||em.urls['1']||em.urls['4']||Object.values(em.urls)[0]||'';
-      if(em.id)   return 'https://static-cdn.jtvnw.net/emoticons/v2/'+em.id+'/default/dark/3.0';
+      if(em.id) return 'https://static-cdn.jtvnw.net/emoticons/v2/'+em.id+'/default/dark/3.0';
       return '';
     });
-    if(fromDirect){ html = injectThirdParty(fromDirect); }
+    if(fromDirect) html = injectThirdParty(fromDirect);
     else {
       var fromFragments=renderFragments(data.message||data);
       html = fromFragments ? injectThirdParty(fromFragments) : injectThirdParty(esc(rawText).replace(/\n/g,'<br>'));
@@ -160,33 +161,18 @@ function renderText(data, isTest, applyMentionHighlight){
   return html;
 }
 
-/* ---- ICONE PRIME base64 ---- */
 var PRIME_B64 = 'data:image/svg+xml;base64,' + btoa('<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21.609 13.5616L21.8382 11.1263C22.0182 9.2137 22.1082 8.25739 21.781 7.86207C21.604 7.64823 21.3633 7.5172 21.106 7.4946C20.6303 7.45282 20.0329 8.1329 18.8381 9.49307C18.2202 10.1965 17.9113 10.5482 17.5666 10.6027C17.3757 10.6328 17.1811 10.6018 17.0047 10.5131C16.6865 10.3529 16.4743 9.91812 16.0499 9.04851L13.8131 4.46485C13.0112 2.82162 12.6102 2 12 2C11.3898 2 10.9888 2.82162 10.1869 4.46486L7.95007 9.04852C7.5257 9.91812 7.31351 10.3529 6.99526 10.5131C6.81892 10.6018 6.62434 10.6328 6.43337 10.6027C6.08872 10.5482 5.77977 10.1965 5.16187 9.49307C3.96708 8.1329 3.36968 7.45282 2.89399 7.4946C2.63666 7.5172 2.39598 7.64823 2.21899 7.86207C1.8918 8.25739 1.9818 9.2137 2.16181 11.1263L2.391 13.5616C2.76865 17.5742 2.95748 19.5805 4.14009 20.7902C5.32271 22 7.09517 22 10.6401 22H13.3599C16.9048 22 18.6773 22 19.8599 20.7902C21.0425 19.5805 21.2313 17.5742 21.609 13.5616Z" fill="#00b4ff"/></svg>');
 
-/* ---- ICONES ---- */
 var EVENT_ICONS = {
-  FOLLOW:      String.fromCodePoint(0x1F49C),
-  SUB:         String.fromCodePoint(0x2B50),
-  SUB_T2:      String.fromCodePoint(0x1F31F),
-  SUB_T3:      String.fromCodePoint(0x1F48E),
-  RESUB:       String.fromCodePoint(0x2B50),
-  RESUB_T2:    String.fromCodePoint(0x1F31F),
-  RESUB_T3:    String.fromCodePoint(0x1F48E),
-  SUB_PRIME:   null,
-  RESUB_PRIME: null,
-  GIFT:        String.fromCodePoint(0x1F381),
-  CGIFT:       String.fromCodePoint(0x1F381),
-  CHEER:       String.fromCodePoint(0x1F48E),
-  RAID:        String.fromCodePoint(0x2694)+String.fromCodePoint(0xFE0F),
-  TIP:         String.fromCodePoint(0x1F4B8),
+  FOLLOW:String.fromCodePoint(0x1F49C), SUB:String.fromCodePoint(0x2B50), SUB_T2:String.fromCodePoint(0x1F31F), SUB_T3:String.fromCodePoint(0x1F48E),
+  RESUB:String.fromCodePoint(0x2B50), RESUB_T2:String.fromCodePoint(0x1F31F), RESUB_T3:String.fromCodePoint(0x1F48E),
+  SUB_PRIME:null, RESUB_PRIME:null, GIFT:String.fromCodePoint(0x1F381), CGIFT:String.fromCodePoint(0x1F381), CHEER:String.fromCodePoint(0x1F48E),
+  RAID:String.fromCodePoint(0x2694)+String.fromCodePoint(0xFE0F), TIP:String.fromCodePoint(0x1F4B8)
 };
 
 function kindLabel(kind){
-  return {SUB:'SUB',SUB_T2:'SUB T2',SUB_T3:'SUB T3',SUB_PRIME:'PRIME',
-          RESUB:'RESUB',RESUB_T2:'RESUB T2',RESUB_T3:'RESUB T3',RESUB_PRIME:'PRIME',
-          FOLLOW:'FOLLOW',GIFT:'GIFT',CGIFT:'GIFT',CHEER:'CHEER',RAID:'RAID',TIP:'TIP'}[kind]||kind;
+  return {SUB:'SUB',SUB_T2:'SUB T2',SUB_T3:'SUB T3',SUB_PRIME:'PRIME',RESUB:'RESUB',RESUB_T2:'RESUB T2',RESUB_T3:'RESUB T3',RESUB_PRIME:'PRIME',FOLLOW:'FOLLOW',GIFT:'GIFT',CGIFT:'GIFT',CHEER:'CHEER',RAID:'RAID',TIP:'TIP'}[kind]||kind;
 }
-
 function kindTierClass(kind){
   if(kind==='SUB_T2'||kind==='RESUB_T2') return 'tier2';
   if(kind==='SUB_T3'||kind==='RESUB_T3') return 'tier3';
@@ -197,56 +183,33 @@ function kindTierClass(kind){
 function createEventEl(name,kind,desc,message,isTest){
   var isPrime=(kind==='SUB_PRIME'||kind==='RESUB_PRIME');
   var el=document.createElement('div');
-  el.className='item event ' + getEventAnimClass();
-
+  el.className='item event '+getEventAnimClass();
   var topline=document.createElement('div');
   topline.className='topline';
-
   var iconSpan=document.createElement('span');
   iconSpan.className='ev-icon';
-  if(isPrime){
-    var img=document.createElement('img');
-    img.src=PRIME_B64;
-    img.className='ev-icon-img';
-    img.alt='Prime';
-    iconSpan.appendChild(img);
-  } else {
-    iconSpan.textContent=EVENT_ICONS[kind]||String.fromCodePoint(0x2728);
-  }
-
-  var nameSpan=document.createElement('span');
-  nameSpan.className='ev-name';
-  nameSpan.textContent=name;
-
-  var descSpan=document.createElement('span');
-  descSpan.className='ev-desc';
-  descSpan.textContent=desc;
-
-  topline.appendChild(iconSpan);
-  topline.appendChild(nameSpan);
-  topline.appendChild(descSpan);
-
+  if(isPrime){ var img=document.createElement('img'); img.src=PRIME_B64; img.className='ev-icon-img'; img.alt='Prime'; iconSpan.appendChild(img); }
+  else { iconSpan.textContent=EVENT_ICONS[kind]||String.fromCodePoint(0x2728); }
+  var nameSpan=document.createElement('span'); nameSpan.className='ev-name'; nameSpan.textContent=name;
+  var descSpan=document.createElement('span'); descSpan.className='ev-desc'; descSpan.textContent=desc;
+  topline.appendChild(iconSpan); topline.appendChild(nameSpan); topline.appendChild(descSpan);
   var showKind=(fd.showEventKind===undefined)?true:(fd.showEventKind===true);
-  if(showKind){
-    var kindSpan=document.createElement('span');
-    var tc=kindTierClass(kind);
-    kindSpan.className='ev-kind'+(tc?' '+tc:'');
-    kindSpan.textContent=kindLabel(kind);
-    topline.appendChild(kindSpan);
-  }
-
+  if(showKind){ var kindSpan=document.createElement('span'); var tc=kindTierClass(kind); kindSpan.className='ev-kind'+(tc?' '+tc:''); kindSpan.textContent=kindLabel(kind); topline.appendChild(kindSpan); }
   el.appendChild(topline);
-
-  if(message&&message.trim()){
-    var bubble=document.createElement('div');
-    bubble.className='bubble';
-    bubble.innerHTML=isTest?parseTestEmotes(message):injectThirdParty(esc(message).replace(/\n/g,'<br>'));
-    el.appendChild(bubble);
-  }
+  if(message&&message.trim()){ var bubble=document.createElement('div'); bubble.className='bubble'; bubble.innerHTML=isTest?parseTestEmotes(message):injectThirdParty(esc(message).replace(/\n/g,'<br>')); el.appendChild(bubble); }
   return el;
 }
 
-/* ---- AJOUT ITEM ---- */
+function removeOldestIfNeeded(feed){
+  while(feed.children.length > maxItems){
+    var old = feed.firstElementChild;
+    if(!old) break;
+    old.classList.add('removing');
+    setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 280);
+    break;
+  }
+}
+
 function addItem(opts){
   var feed=document.getElementById('feed');
   var el;
@@ -254,42 +217,33 @@ function addItem(opts){
     el=createEventEl(opts.name||'viewer',opts.kind||'',opts.desc||'',opts.message||'',opts.isTest||false);
   } else {
     var rawText = String((opts.data&&opts.data.text)||opts.text||'');
-    var doMention = (fd.highlightMentions !== false) && hasMention(rawText);
+    var doMention = shouldHighlightMessage(rawText);
     el=document.createElement('div');
     el.className='item'+(opts.alt?' alt':'')+(doMention?' mention':'');
-    var body=renderText(opts.data||{text:opts.text||''},opts.isTest||false, doMention);
+    var body=renderText(opts.data||{text:opts.text||''},opts.isTest||false,doMention);
     el.innerHTML='<div class="topline"><span class="name" style="color:'+esc(opts.color||'inherit')+'">'+esc(opts.name||'viewer')+'</span><span class="badges">'+badgeIcons(opts.badges||[])+'</span></div><div class="bubble">'+body+'</div>';
   }
   feed.appendChild(el);
-  while(feed.children.length>maxItems) feed.removeChild(feed.firstElementChild);
+  removeOldestIfNeeded(feed);
   el.scrollIntoView({behavior:'smooth',block:'end'});
 }
 
-/* ---- SEQUENCE DE TEST ---- */
 function testSequence(){
   var TB=[{url:'https://static-cdn.jtvnw.net/badges/v1/a3259b9d-5cfb-420a-ab9c-f8579d35c883/1'},{url:'https://static-cdn.jtvnw.net/badges/v1/963b2afc-d913-41ab-b07d-67f74854c710/1'}];
   var seq=[
-    {type:'chat',  name:'HS_Hero',     text:"I'm dying Kappa LUL",              badges:TB, twitchColor:'#FF4500'},
-    {type:'event', name:'ApexAce',     kind:'SUB',         desc:"s'abonne pour le 1er mois !"},
-    {type:'chat',  name:'Viewer42',    text:'@HS_Hero t\'es trop fort !',        badges:[], twitchColor:'#9147ff'},
-    {type:'event', name:'PrimeGuy',    kind:'SUB_PRIME',   desc:"s'abonne avec Prime pour le 1er mois !"},
-    {type:'event', name:'NightOwl',    kind:'RESUB_T2',    desc:'se réabonne pour le 6ème mois !', message:'Toujours là PogChamp'},
-    {type:'event', name:'LegendPro',   kind:'SUB_T3',      desc:"s'abonne pour le 1er mois !",      message:'Le meilleur stream Kappa'},
-    {type:'event', name:'OldPrime',    kind:'RESUB_PRIME', desc:'se réabonne avec Prime pour le 3ème mois !'},
-    {type:'chat',  name:'RocketRacer', text:'So close! BibleThump',              badges:TB, twitchColor:'#1E90FF'},
-    {type:'event', name:'PixelPirate', kind:'FOLLOW',      desc:'vient de follow la chaîne !'},
-    {type:'event', name:'GiftKing',    kind:'CGIFT',       desc:'offre 5 sub gifts à la communauté !'},
+    {type:'chat',name:'HS_Hero',text:"I'm dying Kappa LUL",badges:TB,twitchColor:'#FF4500'},
+    {type:'event',name:'ApexAce',kind:'SUB',desc:"s'abonne pour le 1er mois !"},
+    {type:'chat',name:'Viewer42',text:'@streamer trop fort !',badges:[],twitchColor:'#9147ff'},
+    {type:'event',name:'PrimeGuy',kind:'SUB_PRIME',desc:"s'abonne avec Prime pour le 1er mois !"},
+    {type:'event',name:'NightOwl',kind:'RESUB_T2',desc:'se réabonne pour le 6ème mois !',message:'Toujours là PogChamp'},
+    {type:'event',name:'LegendPro',kind:'SUB_T3',desc:"s'abonne pour le 1er mois !",message:'Le meilleur stream Kappa'},
+    {type:'event',name:'OldPrime',kind:'RESUB_PRIME',desc:'se réabonne avec Prime pour le 3ème mois !'},
+    {type:'chat',name:'RocketRacer',text:'So close! BibleThump',badges:TB,twitchColor:'#1E90FF'},
+    {type:'event',name:'PixelPirate',kind:'FOLLOW',desc:'vient de follow la chaîne !'}
   ];
-  seq.forEach(function(it,i){
-    setTimeout(function(){
-      addItem({type:it.type,name:it.name,kind:it.kind||'',desc:it.desc||'',message:it.message||'',
-        color:resolveNameColor(it.twitchColor||''),alt:i%2===1,
-        data:{text:it.text||''},badges:it.badges||[],isTest:true});
-    },i*900);
-  });
+  seq.forEach(function(it,i){ setTimeout(function(){ addItem({type:it.type,name:it.name,kind:it.kind||'',desc:it.desc||'',message:it.message||'',color:resolveNameColor(it.twitchColor||''),alt:i%2===1,data:{text:it.text||''},badges:it.badges||[],isTest:true}); },i*900); });
 }
 
-/* ---- STREAMELEMENTS ---- */
 window.addEventListener('onWidgetLoad',function(obj){
   widgetLoaded=true;
   fd=(obj.detail&&obj.detail.fieldData)||{};
@@ -299,69 +253,30 @@ window.addEventListener('onWidgetLoad',function(obj){
   if(ch&&ch.providerId) loadThirdPartyEmotes(ch.providerId);
   if(fd.testMessages) setTimeout(testSequence,300);
 });
-
-window.addEventListener('load',function(){
-  setTimeout(function(){if(!widgetLoaded){applyThemeVars();testSequence();}},500);
-});
-
+window.addEventListener('load',function(){ setTimeout(function(){ if(!widgetLoaded){ applyThemeVars(); testSequence(); } },500); });
 window.addEventListener('onEventReceived',function(obj){
-  var listener=obj.detail.listener;
-  var event=(obj.detail.event)||{};
-  var data=event.data||event;
-
+  var listener=obj.detail.listener, event=(obj.detail.event)||{}, data=event.data||event;
   if(listener==='message'){
     if(fd.hideCommands&&String(data.text||'').startsWith('!')) return;
     var tc=(fd.useTwitchColor===true)?(data.displayColor||data.color||''):'';
-    addItem({type:'chat',name:data.displayName||data.nick||data.name||'viewer',
-      badges:data.badges||[],color:resolveNameColor(tc),data:data,isTest:false});
+    addItem({type:'chat',name:data.displayName||data.nick||data.name||'viewer',badges:data.badges||[],color:resolveNameColor(tc),data:data,isTest:false});
     return;
   }
-
   var evName=event.name||data.displayName||data.name||'Someone';
-
-  if(listener==='follower-latest')
-    addItem({type:'event',name:evName,kind:'FOLLOW',desc:'vient de follow la chaîne !'});
-
+  if(listener==='follower-latest') addItem({type:'event',name:evName,kind:'FOLLOW',desc:'vient de follow la chaîne !'});
   if(listener==='subscriber-latest'){
-    var isBulk=data.bulkGifted===true;
-    var isGifted=data.gifted===true;
-    var sender=data.sender||'';
-    var tierRaw=data.tier||data.subPlan||'';
-    var isPrime=(tierRaw==='Prime'||tierRaw==='prime'||data.prime===true);
-    var subMsg=data.message||'';
+    var isBulk=data.bulkGifted===true, isGifted=data.gifted===true, sender=data.sender||'', tierRaw=data.tier||data.subPlan||'', isPrime=(tierRaw==='Prime'||tierRaw==='prime'||data.prime===true), subMsg=data.message||'';
     var tierSuffix=isPrime?'_PRIME':tierRaw==='3000'?'_T3':tierRaw==='2000'?'_T2':'';
-    if(isBulk){
-      var qty=data.amount||1;
-      addItem({type:'event',name:sender||evName,kind:'CGIFT',
-        desc:'offre '+qty+' sub'+(qty>1?'s':'')+' à la communauté !'});
-    } else if(isGifted){
-      var recipient=data.name||data.displayName||'';
-      addItem({type:'event',name:sender||evName,kind:'GIFT',
-        desc:recipient?'offre un sub gift à '+recipient+' !':'offre un sub gift !'});
-    } else {
-      var months=parseInt(data.months||data.streak||data.amount||event.amount||1,10);
-      if(isNaN(months)||months<1) months=1;
-      var isResub=months>1;
-      var kind=(isResub?'RESUB':'SUB')+tierSuffix;
-      var monthStr=isPrime
-        ?(isResub?'se réabonne avec Prime pour le '+months+'ème mois':"s'abonne avec Prime pour le 1er mois")
-        :(isResub?'se réabonne pour le '+months+'ème mois':"s'abonne pour le 1er mois");
+    if(isBulk){ var qty=data.amount||1; addItem({type:'event',name:sender||evName,kind:'CGIFT',desc:'offre '+qty+' sub'+(qty>1?'s':'')+' à la communauté !'}); }
+    else if(isGifted){ var recipient=data.name||data.displayName||''; addItem({type:'event',name:sender||evName,kind:'GIFT',desc:recipient?'offre un sub gift à '+recipient+' !':'offre un sub gift !'}); }
+    else {
+      var months=parseInt(data.months||data.streak||data.amount||event.amount||1,10); if(isNaN(months)||months<1) months=1;
+      var isResub=months>1, kind=(isResub?'RESUB':'SUB')+tierSuffix;
+      var monthStr=isPrime ? (isResub?'se réabonne avec Prime pour le '+months+'ème mois':"s'abonne avec Prime pour le 1er mois") : (isResub?'se réabonne pour le '+months+'ème mois':"s'abonne pour le 1er mois");
       addItem({type:'event',name:evName,kind:kind,desc:monthStr+' !',message:subMsg});
     }
   }
-
-  if(listener==='cheer-latest')
-    addItem({type:'event',name:evName,kind:'CHEER',desc:'a envoyé '+(data.amount||event.amount||'')+' bits !'});
-
-  if(listener==='raid-latest'){
-    var viewers=data.amount||data.viewers||event.amount||0;
-    addItem({type:'event',name:evName,kind:'RAID',desc:'débarque avec '+viewers+' viewer'+(viewers>1?'s':'')+' !'});
-  }
-
-  if(listener==='tip-latest'){
-    var tipAmount=data.amount||event.amount||'';
-    var currency=data.currency||event.currency||'EUR';
-    addItem({type:'event',name:evName,kind:'TIP',
-      desc:'a fait un don de '+tipAmount+' '+currency+' !',message:data.message||''});
-  }
+  if(listener==='cheer-latest') addItem({type:'event',name:evName,kind:'CHEER',desc:'a envoyé '+(data.amount||event.amount||'')+' bits !'});
+  if(listener==='raid-latest'){ var viewers=data.amount||data.viewers||event.amount||0; addItem({type:'event',name:evName,kind:'RAID',desc:'débarque avec '+viewers+' viewer'+(viewers>1?'s':'')+' !'}); }
+  if(listener==='tip-latest'){ var tipAmount=data.amount||event.amount||'', currency=data.currency||event.currency||'EUR'; addItem({type:'event',name:evName,kind:'TIP',desc:'a fait un don de '+tipAmount+' '+currency+' !',message:data.message||''}); }
 });
