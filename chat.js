@@ -25,6 +25,8 @@ function applyThemeVars(){
   var root = document.documentElement;
   root.style.setProperty('--scale', fd.scale || 1);
   if (fd.fontFamily) root.style.setProperty('--font', fd.fontFamily);
+  /* Couleur highlight mention */
+  root.style.setProperty('--highlight-color', fd.highlightColor || '#f59e0b');
   var themes = {
     monster: { nameBg:'#befe2b', nameText:'#111111', bubbleBg:'#2b2d39', bubbleBg2:'#242633', bubbleText:'#f6fbff' },
     pastel:  { nameBg:'#ffccf2', nameText:'#2b2140', bubbleBg:'#f7f0ff', bubbleBg2:'#efe7ff', bubbleText:'#3b2b58' },

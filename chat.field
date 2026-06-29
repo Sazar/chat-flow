@@ -43,13 +43,18 @@
   },
   "highlightMentions": {
     "type": "checkbox",
-    "label": "Highlight @mentions (contour doré)",
+    "label": "Highlight @mentions (contour coloré)",
     "value": true
   },
   "mentionTarget": {
     "type": "text",
     "label": "Pseudo Twitch à highlight (sans @)",
     "value": ""
+  },
+  "highlightColor": {
+    "type": "colorpicker",
+    "label": "Couleur du highlight @mention",
+    "value": "#f59e0b"
   },
   "nameBg": {
     "type": "colorpicker",
