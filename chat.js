@@ -14,6 +14,12 @@ function resolveNameColor(twitchColor) {
   return fd.nameText || 'inherit';
 }
 
+function getEventAnimClass(){
+  var anim = String(fd.eventAnim || 'slide').toLowerCase();
+  var valid = ['slide','pop','bounce','flip','glow'];
+  return 'anim-' + (valid.includes(anim) ? anim : 'slide');
+}
+
 function applyThemeVars(){
   var w = document.getElementById('widget');
   var theme = String(fd.theme || 'monster').toLowerCase();
@@ -176,7 +182,7 @@ function kindTierClass(kind){
 function createEventEl(name,kind,desc,message,isTest){
   var isPrime=(kind==='SUB_PRIME'||kind==='RESUB_PRIME');
   var el=document.createElement('div');
-  el.className='item event';
+  el.className='item event ' + getEventAnimClass();
 
   var topline=document.createElement('div');
   topline.className='topline';
@@ -320,12 +326,9 @@ window.addEventListener('onEventReceived',function(obj){
       if(isNaN(months)||months<1) months=1;
       var isResub=months>1;
       var kind=(isResub?'RESUB':'SUB')+tierSuffix;
-      var monthStr;
-      if(isPrime){
-        monthStr=isResub?'se r\u00e9abonne avec Prime pour le '+months+'\u00e8me mois':"s'abonne avec Prime pour le 1er mois";
-      } else {
-        monthStr=isResub?'se r\u00e9abonne pour le '+months+'\u00e8me mois':"s'abonne pour le 1er mois";
-      }
+      var monthStr=isPrime
+        ?(isResub?'se r\u00e9abonne avec Prime pour le '+months+'\u00e8me mois':"s'abonne avec Prime pour le 1er mois")
+        :(isResub?'se r\u00e9abonne pour le '+months+'\u00e8me mois':"s'abonne pour le 1er mois");
       addItem({type:'event',name:evName,kind:kind,desc:monthStr+' !',message:subMsg});
     }
   }

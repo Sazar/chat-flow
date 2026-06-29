@@ -34,13 +34,70 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 #feed::-webkit-scrollbar{ display:none; }
 #feed{ scrollbar-width:none; }
 
+/* ==============================================================
+   ITEM CHAT — drop-shadow OK car pas d'animation sur pilule
+============================================================== */
 .item{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
-  animation:in .3s cubic-bezier(.2,.9,.2,1);
-  filter:drop-shadow(var(--shadow)); flex-shrink:0;
+  filter:drop-shadow(var(--shadow));
+  flex-shrink:0;
 }
 
+/* Animation d'entrée chat (simple, sobre) */
+.item:not(.event){
+  animation: in-chat .3s cubic-bezier(.2,.9,.2,1) both;
+}
+
+@keyframes in-chat{
+  from{ opacity:0; transform:translateY(8px) scale(.98); }
+  to{   opacity:1; transform:translateY(0)   scale(1);   }
+}
+
+/* ==============================================================
+   ITEM EVENT — PAS de filter (évite le flou sur animations CSS)
+   On compense avec box-shadow sur .topline
+============================================================== */
+.item.event{
+  width:fit-content; max-width:100%;
+  display:flex; flex-direction:column; align-items:flex-start;
+  filter:none;   /* ← correction du flou T3 */
+  flex-shrink:0;
+}
+
+/* --- Animations d'entrée event --- */
+.item.event.anim-slide  { animation: ev-slide  .45s cubic-bezier(.2,.9,.2,1) both; }
+.item.event.anim-pop    { animation: ev-pop    .4s  cubic-bezier(.34,1.56,.64,1) both; }
+.item.event.anim-bounce { animation: ev-bounce .6s  cubic-bezier(.36,.07,.19,.97) both; }
+.item.event.anim-flip   { animation: ev-flip   .5s  ease both; }
+.item.event.anim-glow   { animation: ev-glow   .5s  ease both; }
+
+@keyframes ev-slide{
+  from{ opacity:0; transform:translateY(28px); }
+  to{   opacity:1; transform:translateY(0);    }
+}
+@keyframes ev-pop{
+  from{ opacity:0; transform:scale(.5); }
+  to{   opacity:1; transform:scale(1);  }
+}
+@keyframes ev-bounce{
+  0%  { opacity:0; transform:translateY(32px) scale(.95); }
+  55% { opacity:1; transform:translateY(-8px) scale(1.03); }
+  75% { transform:translateY(4px)  scale(.98); }
+  90% { transform:translateY(-3px) scale(1.01); }
+  100%{ transform:translateY(0)    scale(1);    }
+}
+@keyframes ev-flip{
+  from{ opacity:0; transform:perspective(400px) rotateX(-70deg) translateY(20px); }
+  to{   opacity:1; transform:perspective(400px) rotateX(0deg)   translateY(0);    }
+}
+@keyframes ev-glow{
+  0%  { opacity:0; transform:scale(.95); filter:brightness(2.5) blur(4px); }
+  60% { opacity:1; transform:scale(1);   filter:brightness(1.3) blur(0px); }
+  100%{ opacity:1; transform:scale(1);   filter:brightness(1)   blur(0px); }
+}
+
+/* ---- TOPLINE chat ---- */
 .item .topline{
   display:inline-flex; align-items:center; gap:6px;
   background:var(--name-bg); color:var(--name-text);
@@ -51,6 +108,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 .item .badges{ display:inline-flex; align-items:center; gap:3px; }
 .item .badge{ width:14px; height:14px; display:inline-block; flex:0 0 auto; }
 
+/* ---- BULLE chat ---- */
 .item .bubble{
   margin-top:-8px; margin-left:10px;
   background:var(--bubble-bg); color:var(--bubble-text);
@@ -65,23 +123,23 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   vertical-align:middle !important; margin:-2px 1px !important; display:inline-block !important;
 }
 
-.item.event{ width:fit-content; max-width:100%; }
-
+/* ---- TOPLINE event ---- */
 .item.event .topline{
   display:inline-flex; align-items:center; flex-wrap:wrap; gap:9px;
   background:var(--name-bg); color:var(--name-text);
   padding:20px 16px; border-radius:14px;
   font-size:17px; font-weight:800; line-height:1.4;
-  box-shadow:var(--shadow); word-break:break-word;
+  box-shadow:0 8px 24px rgba(0,0,0,.22), 0 2px 6px rgba(0,0,0,.15);
+  word-break:break-word;
 }
 .item.event .ev-icon{ font-size:21px; line-height:1; flex:0 0 auto; display:inline-flex; align-items:center; }
 .item.event .ev-icon .ev-icon-img{ width:22px; height:22px; display:block; }
 .item.event .ev-name{ font-weight:900; flex:0 0 auto; }
 .item.event .ev-desc{ font-weight:500; opacity:0.88; flex:1 1 auto; word-break:break-word; }
 
-/* ================================================================
+/* ==============================================================
    PILULES
-================================================================ */
+============================================================== */
 .item.event .ev-kind{
   position:relative;
   font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
@@ -93,8 +151,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* Tier 2 : pulse violet */
 .item.event .ev-kind.tier2{
-  background:#7c3aed;
-  color:#ffffff;
+  background:#7c3aed; color:#ffffff;
   animation: pulse-t2 2.2s ease-in-out infinite;
 }
 @keyframes pulse-t2{
@@ -102,7 +159,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   50%    { box-shadow:0 0 14px 4px rgba(167,109,255,.85),0 0 28px 8px rgba(124,58,237,.4); }
 }
 
-/* Tier 3 : shimmer dore (animation de prime, couleur T3) */
+/* Tier 3 : shimmer doré */
 .item.event .ev-kind.tier3{
   background: linear-gradient(135deg, #d97706, #f59e0b, #fde68a, #f59e0b, #d97706);
   background-size: 300% 100%;
@@ -112,16 +169,17 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 }
 @keyframes shimmer-t3{
   0%  { background-position: 200% center; }
-  100%{ background-position: -200% center; }
+  100%{ background-position:-200% center; }
 }
 
-/* Prime : bleu fixe, sans animation */
+/* Prime : bleu fixe */
 .item.event .ev-kind.prime{
   background: linear-gradient(135deg, #0070e0, #00b4ff);
   color:#ffffff;
   box-shadow: 0 0 8px rgba(0,180,255,.35);
 }
 
+/* ---- Animation d'entrée chat (fallback) ---- */
 @keyframes in{
   from{ opacity:0; transform:translateY(10px) scale(.985); }
   to{   opacity:1; transform:translateY(0) scale(1); }

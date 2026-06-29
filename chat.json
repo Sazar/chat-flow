@@ -1,0 +1,66 @@
+{
+  "name": "Chat Flow",
+  "author": "Sazar",
+  "description": "Widget chat avec events",
+  "version": "1.0",
+  "settings": {
+    "theme": {
+      "type": "dropdown",
+      "label": "Thème",
+      "value": "monster",
+      "options": {
+        "monster": "Monster (vert/sombre)",
+        "pastel": "Pastel (rose/violet)",
+        "night": "Night (violet foncé)",
+        "candy": "Candy (rose vif)"
+      }
+    },
+    "eventAnim": {
+      "type": "dropdown",
+      "label": "Animation des events",
+      "value": "slide",
+      "options": {
+        "slide":  "Slide (glisse depuis le bas)",
+        "pop":    "Pop (apparaît en agrandissant)",
+        "bounce": "Bounce (rebond)",
+        "flip":   "Flip (rotation 3D)",
+        "glow":   "Glow (flash lumineux)"
+      }
+    },
+    "maxItems": {
+      "type": "number",
+      "label": "Nombre max de messages",
+      "value": 11,
+      "min": 3,
+      "max": 30
+    },
+    "scale": {
+      "type": "number",
+      "label": "Échelle du widget",
+      "value": 1,
+      "min": 0.5,
+      "max": 2,
+      "step": 0.1
+    },
+    "useTwitchColor": {
+      "type": "checkbox",
+      "label": "Utiliser la couleur Twitch des pseudos",
+      "value": true
+    },
+    "showEventKind": {
+      "type": "checkbox",
+      "label": "Afficher les pilules (SUB, FOLLOW...)",
+      "value": true
+    },
+    "hideCommands": {
+      "type": "checkbox",
+      "label": "Masquer les commandes (messages commençant par !)",
+      "value": false
+    },
+    "testMessages": {
+      "type": "checkbox",
+      "label": "Afficher messages de test au démarrage",
+      "value": false
+    }
+  }
+}
