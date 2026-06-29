@@ -11,18 +11,13 @@
   --bubble-text:#f6fbff;
 }
 
-html, body{
-  margin:0; width:100%; height:100%;
-  overflow:hidden; background:transparent;
-  font-family:var(--font);
-}
+html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transparent; font-family:var(--font); }
 
 #widget{
   width:600px; height:900px;
   position:relative; overflow:hidden;
   background:transparent;
-  transform:scale(var(--scale));
-  transform-origin:top left;
+  transform:scale(var(--scale)); transform-origin:top left;
 }
 
 #widget.theme-monster{ --name-bg:#befe2b; --name-text:#111111; --bubble-bg:#2b2d39; --bubble-bg-2:#242633; --bubble-text:#f6fbff; }
@@ -32,26 +27,20 @@ html, body{
 
 #feed{
   position:absolute; inset:0;
-  display:flex; flex-direction:column;
-  justify-content:flex-end;
-  gap:10px; padding:18px;
-  box-sizing:border-box;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  gap:10px; padding:18px; box-sizing:border-box;
   overflow-y:auto; scroll-behavior:smooth;
 }
 #feed::-webkit-scrollbar{ display:none; }
 #feed{ scrollbar-width:none; }
 
-/* ---- ITEM commun ---- */
 .item{
   width:fit-content; max-width:100%;
-  display:flex; flex-direction:column;
-  align-items:flex-start;
+  display:flex; flex-direction:column; align-items:flex-start;
   animation:in .3s cubic-bezier(.2,.9,.2,1);
-  filter:drop-shadow(var(--shadow));
-  flex-shrink:0;
+  filter:drop-shadow(var(--shadow)); flex-shrink:0;
 }
 
-/* ---- TOPLINE chat ---- */
 .item .topline{
   display:inline-flex; align-items:center; gap:6px;
   background:var(--name-bg); color:var(--name-text);
@@ -59,11 +48,9 @@ html, body{
   font-size:14px; font-weight:800; line-height:1;
   box-shadow:var(--shadow); z-index:3;
 }
-
 .item .badges{ display:inline-flex; align-items:center; gap:3px; }
 .item .badge{ width:14px; height:14px; display:inline-block; flex:0 0 auto; }
 
-/* ---- BULLE chat ---- */
 .item .bubble{
   margin-top:-8px; margin-left:10px;
   background:var(--bubble-bg); color:var(--bubble-text);
@@ -75,113 +62,64 @@ html, body{
 .item.alt .bubble{ background:var(--bubble-bg-2); }
 .item .bubble img.emote{
   height:24px !important; width:auto !important;
-  vertical-align:middle !important;
-  margin:-2px 1px !important; display:inline-block !important;
+  vertical-align:middle !important; margin:-2px 1px !important; display:inline-block !important;
 }
 
-/* ---- EVENT ---- */
 .item.event{ width:fit-content; max-width:100%; }
 
 .item.event .topline{
-  display:inline-flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:9px;
+  display:inline-flex; align-items:center; flex-wrap:wrap; gap:9px;
   background:var(--name-bg); color:var(--name-text);
-  padding:20px 16px;
-  border-radius:14px;
-  font-size:17px;
-  font-weight:800;
-  line-height:1.4;
-  box-shadow:var(--shadow);
-  word-break:break-word;
+  padding:20px 16px; border-radius:14px;
+  font-size:17px; font-weight:800; line-height:1.4;
+  box-shadow:var(--shadow); word-break:break-word;
 }
-
-.item.event .ev-icon{
-  font-size:21px; line-height:1; flex:0 0 auto;
-  display:inline-flex; align-items:center;
-}
-.item.event .ev-icon .ev-icon-img{
-  width:22px; height:22px; display:block;
-}
-
+.item.event .ev-icon{ font-size:21px; line-height:1; flex:0 0 auto; display:inline-flex; align-items:center; }
+.item.event .ev-icon .ev-icon-img{ width:22px; height:22px; display:block; }
 .item.event .ev-name{ font-weight:900; flex:0 0 auto; }
 .item.event .ev-desc{ font-weight:500; opacity:0.88; flex:1 1 auto; word-break:break-word; }
 
 /* ================================================================
-   PILULE ev-kind
+   PILULES
 ================================================================ */
 .item.event .ev-kind{
   position:relative;
-  font-size:10px;
-  font-weight:800;
-  letter-spacing:.07em;
-  text-transform:uppercase;
-  padding:5px 10px;
-  border-radius:999px;
-  line-height:1;
-  flex:0 0 auto;
-  white-space:nowrap;
-  margin-left:4px;
-  background:rgba(0,0,0,.22);
-  color:inherit;
+  font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
+  padding:5px 10px; border-radius:999px; line-height:1;
+  flex:0 0 auto; white-space:nowrap; margin-left:4px;
+  background:rgba(0,0,0,.22); color:inherit;
   overflow:visible;
 }
 
-/* ---- Tier 2 : pulse violet ---- */
+/* Tier 2 : pulse violet */
 .item.event .ev-kind.tier2{
   background:#7c3aed;
   color:#ffffff;
   animation: pulse-t2 2.2s ease-in-out infinite;
 }
 @keyframes pulse-t2{
-  0%,100% { box-shadow: 0 0 6px 1px rgba(124,58,237,.5), 0 0 14px 3px rgba(124,58,237,.25); }
-  50%      { box-shadow: 0 0 14px 4px rgba(167,109,255,.85), 0 0 28px 8px rgba(124,58,237,.4); }
+  0%,100%{ box-shadow:0 0 6px 1px rgba(124,58,237,.5),0 0 14px 3px rgba(124,58,237,.25); }
+  50%    { box-shadow:0 0 14px 4px rgba(167,109,255,.85),0 0 28px 8px rgba(124,58,237,.4); }
 }
 
-/* ---- Tier 3 : pulse dore + sparkles ---- */
+/* Tier 3 : shimmer dore (animation de prime, couleur T3) */
 .item.event .ev-kind.tier3{
-  background:linear-gradient(135deg,#d97706,#f59e0b);
+  background: linear-gradient(135deg, #d97706, #f59e0b, #fde68a, #f59e0b, #d97706);
+  background-size: 300% 100%;
   color:#1a0a00;
-  animation: pulse-t3 1.8s ease-in-out infinite;
+  animation: shimmer-t3 2.5s linear infinite;
   margin:6px 6px 6px 10px;
 }
-@keyframes pulse-t3{
-  0%,100% { box-shadow: 0 0 8px 2px rgba(245,158,11,.55), 0 0 20px 5px rgba(217,119,6,.3); }
-  50%      { box-shadow: 0 0 18px 6px rgba(251,191,36,.95), 0 0 36px 12px rgba(245,158,11,.5); }
-}
-.item.event .ev-kind.tier3::before,
-.item.event .ev-kind.tier3::after{
-  content:'\2726';
-  position:absolute;
-  font-size:9px;
-  color:#fde68a;
-  pointer-events:none;
-  animation: sparkle-spin 2.4s ease-in-out infinite;
-}
-.item.event .ev-kind.tier3::before{ top:-7px; right:-6px; animation-delay:0s; }
-.item.event .ev-kind.tier3::after{  bottom:-7px; left:-5px; animation-delay:1.2s; }
-@keyframes sparkle-spin{
-  0%   { opacity:0;  transform:scale(.4) rotate(0deg); }
-  30%  { opacity:1;  transform:scale(1.2) rotate(90deg); }
-  60%  { opacity:.7; transform:scale(1) rotate(180deg); }
-  100% { opacity:0;  transform:scale(.4) rotate(360deg); }
+@keyframes shimmer-t3{
+  0%  { background-position: 200% center; }
+  100%{ background-position: -200% center; }
 }
 
-/* ---- Prime : shimmer bleu cyan ---- */
+/* Prime : bleu fixe, sans animation */
 .item.event .ev-kind.prime{
-  background: linear-gradient(135deg, #0070e0, #00b4ff, #0070e0);
-  background-size: 200% 100%;
-  color: #ffffff;
-  animation: shimmer-prime 2.5s linear infinite, pulse-prime 2.5s ease-in-out infinite;
-}
-@keyframes shimmer-prime{
-  0%   { background-position: 200% center; }
-  100% { background-position: -200% center; }
-}
-@keyframes pulse-prime{
-  0%,100% { box-shadow: 0 0 6px 1px rgba(0,180,255,.45), 0 0 14px 3px rgba(0,112,224,.2); }
-  50%      { box-shadow: 0 0 14px 5px rgba(0,180,255,.9), 0 0 28px 9px rgba(0,112,224,.45); }
+  background: linear-gradient(135deg, #0070e0, #00b4ff);
+  color:#ffffff;
+  box-shadow: 0 0 8px rgba(0,180,255,.35);
 }
 
 @keyframes in{
