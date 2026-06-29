@@ -166,15 +166,15 @@ function renderText(data, isTest){
   return injectThirdParty(esc(rawText).replace(/\n/g,'<br>'));
 }
 
-/* ---- ICONES EVENEMENTS ---- */
+/* ---- OPTION B : icone selon le tier ---- */
 var EVENT_ICONS = {
   FOLLOW:   String.fromCodePoint(0x1F49C),
-  SUB:      String.fromCodePoint(0x2B50),
-  SUB_T2:   String.fromCodePoint(0x2B50),
-  SUB_T3:   String.fromCodePoint(0x2B50),
+  SUB:      String.fromCodePoint(0x2B50),           /* ⭐ tier 1 */
+  SUB_T2:   String.fromCodePoint(0x1F31F),          /* 🌟 tier 2 */
+  SUB_T3:   String.fromCodePoint(0x1F48E),          /* 💎 tier 3 */
   RESUB:    String.fromCodePoint(0x2B50),
-  RESUB_T2: String.fromCodePoint(0x2B50),
-  RESUB_T3: String.fromCodePoint(0x2B50),
+  RESUB_T2: String.fromCodePoint(0x1F31F),
+  RESUB_T3: String.fromCodePoint(0x1F48E),
   GIFT:     String.fromCodePoint(0x1F381),
   CGIFT:    String.fromCodePoint(0x1F381),
   CHEER:    String.fromCodePoint(0x1F48E),
@@ -182,6 +182,7 @@ var EVENT_ICONS = {
   TIP:      String.fromCodePoint(0x1F4B8),
 };
 
+/* ---- OPTION C : label + classe CSS pour couleur pilule ---- */
 function kindLabel(kind) {
   var labels = {
     SUB:'SUB', SUB_T2:'SUB T2', SUB_T3:'SUB T3',
@@ -190,6 +191,12 @@ function kindLabel(kind) {
     CHEER:'CHEER', RAID:'RAID', TIP:'TIP',
   };
   return labels[kind] || kind;
+}
+
+function kindTierClass(kind) {
+  if (kind === 'SUB_T2' || kind === 'RESUB_T2') return 'tier2';
+  if (kind === 'SUB_T3' || kind === 'RESUB_T3') return 'tier3';
+  return '';
 }
 
 function createEventEl(name, kind, desc, message, isTest) {
@@ -219,7 +226,8 @@ function createEventEl(name, kind, desc, message, isTest) {
   var showKind = (fd.showEventKind === undefined) ? true : (fd.showEventKind === true);
   if (showKind) {
     var kindSpan = document.createElement('span');
-    kindSpan.className = 'ev-kind';
+    var tierClass = kindTierClass(kind);
+    kindSpan.className = 'ev-kind' + (tierClass ? ' ' + tierClass : '');
     kindSpan.textContent = kindLabel(kind);
     topline.appendChild(kindSpan);
   }
@@ -282,15 +290,15 @@ function testSequence(){
   ];
   var seq = [
     { type:'chat',  name:'HS_Hero',     text:"I'm dying of laughter Kappa LUL", badges:TEST_BADGES, twitchColor:'#FF4500' },
-    { type:'event', name:'ApexAce',     kind:'SUB',    desc:"s'abonne pour le 1er mois !" },
-    { type:'event', name:'NightOwl',    kind:'RESUB',  desc:'se réabonne pour le 6ème mois !', message:'Toujours là PogChamp' },
-    { type:'event', name:'LegendPro',   kind:'SUB_T3', desc:"s'abonne pour le 1er mois [Tier 3] !", message:'Le meilleur stream Kappa' },
+    { type:'event', name:'ApexAce',     kind:'SUB',      desc:"s'abonne pour le 1er mois !" },
+    { type:'event', name:'NightOwl',    kind:'RESUB_T2', desc:'se réabonne pour le 6ème mois !', message:'Toujours là PogChamp' },
+    { type:'event', name:'LegendPro',   kind:'SUB_T3',   desc:"s'abonne pour le 1er mois !",  message:'Le meilleur stream Kappa' },
     { type:'chat',  name:'RocketRacer', text:'So close! BibleThump', badges:TEST_BADGES, twitchColor:'#1E90FF' },
-    { type:'event', name:'PixelPirate', kind:'FOLLOW', desc:'vient de follow la chaîne !' },
-    { type:'event', name:'GiftKing',    kind:'GIFT',   desc:'offre un sub gift à PixelFox !' },
-    { type:'event', name:'GiftKing',    kind:'CGIFT',  desc:'offre 5 sub gifts à la communauté !' },
-    { type:'event', name:'BitsDude',    kind:'CHEER',  desc:'a envoyé 500 bits !' },
-    { type:'event', name:'TipGuy',      kind:'TIP',    desc:'a fait un don de 10 EUR !', message:'Super stream !' },
+    { type:'event', name:'PixelPirate', kind:'FOLLOW',   desc:'vient de follow la chaîne !' },
+    { type:'event', name:'GiftKing',    kind:'GIFT',     desc:'offre un sub gift à PixelFox !' },
+    { type:'event', name:'GiftKing',    kind:'CGIFT',    desc:'offre 5 sub gifts à la communauté !' },
+    { type:'event', name:'BitsDude',    kind:'CHEER',    desc:'a envoyé 500 bits !' },
+    { type:'event', name:'TipGuy',      kind:'TIP',      desc:'a fait un don de 10 EUR !', message:'Super stream !' },
   ];
   seq.forEach(function(it, i){
     setTimeout(function(){
@@ -330,9 +338,6 @@ window.addEventListener('onEventReceived', function(obj){
   var event    = (obj.detail.event) || {};
   var data     = event.data || event;
 
-  /* DEBUG - retire ce bloc apres verification */
-  console.log('[ChatFlow] listener:', listener, '| data:', JSON.stringify(data));
-
   if (listener === 'message') {
     if (fd.hideCommands && String(data.text || '').startsWith('!')) return;
     var twitchColor = (fd.useTwitchColor === true)
@@ -358,7 +363,6 @@ window.addEventListener('onEventReceived', function(obj){
     var sender   = data.sender || '';
     var tierRaw  = data.tier || data.subPlan || '';
     var tierSuffix = tierRaw === '3000' ? '_T3' : tierRaw === '2000' ? '_T2' : '';
-    var tierLabel  = tierRaw === '3000' ? ' [Tier 3]' : tierRaw === '2000' ? ' [Tier 2]' : '';
     var subMsg   = data.message || '';
 
     if (isBulk) {
@@ -370,19 +374,14 @@ window.addEventListener('onEventReceived', function(obj){
       addItem({ type:'event', name: sender || evName, kind:'GIFT',
         desc: recipient ? 'offre un sub gift à ' + recipient + ' !' : 'offre un sub gift !' });
     } else {
-      /*
-       * SE peut envoyer le nombre de mois dans differents champs selon la version :
-       * data.months, data.amount, data.streak, ou event.amount
-       */
       var months = parseInt(data.months || data.streak || data.amount || event.amount || 1, 10);
       if (isNaN(months) || months < 1) months = 1;
-      var isResub = months > 1;
-      var kind    = (isResub ? 'RESUB' : 'SUB') + tierSuffix;
+      var isResub  = months > 1;
+      var kind     = (isResub ? 'RESUB' : 'SUB') + tierSuffix;
       var monthStr = months === 1
         ? "s'abonne pour le 1er mois"
         : 'se réabonne pour le ' + months + 'ème mois';
-      var subDesc = monthStr + tierLabel + ' !';
-      addItem({ type:'event', name:evName, kind:kind, desc:subDesc, message:subMsg });
+      addItem({ type:'event', name:evName, kind:kind, desc:monthStr + ' !', message:subMsg });
     }
   }
 

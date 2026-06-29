@@ -115,6 +115,7 @@ html, body{
   word-break:break-word;
 }
 
+/* ---- PILULE ev-kind (option C) ---- */
 .item.event .ev-kind{
   font-size:10px;
   font-weight:800;
@@ -122,11 +123,27 @@ html, body{
   text-transform:uppercase;
   padding:5px 10px;
   border-radius:999px;
-  background:rgba(0,0,0,.18);
   line-height:1;
   flex:0 0 auto;
   white-space:nowrap;
   margin-left:4px;
+  /* defaut T1 */
+  background:rgba(0,0,0,.22);
+  color:inherit;
+}
+
+/* Tier 2 - violet */
+.item.event .ev-kind.tier2{
+  background:#7c3aed;
+  color:#ffffff;
+  box-shadow:0 0 8px rgba(124,58,237,.55);
+}
+
+/* Tier 3 - dore avec glow */
+.item.event .ev-kind.tier3{
+  background:linear-gradient(135deg,#d97706,#f59e0b);
+  color:#1a0a00;
+  box-shadow:0 0 10px rgba(245,158,11,.6);
 }
 
 @keyframes in{
