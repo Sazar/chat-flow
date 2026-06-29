@@ -10,6 +10,18 @@
       "candy": "Candy"
     }
   },
+  "eventAnim": {
+    "type": "dropdown",
+    "label": "Animation des events",
+    "value": "slide",
+    "options": {
+      "slide": "Slide — glisse depuis le bas",
+      "pop": "Pop — appara\u00eet en agrandissant",
+      "bounce": "Bounce — rebond",
+      "flip": "Flip — rotation 3D",
+      "glow": "Glow — flash lumineux"
+    }
+  },
   "useNameBarColor": {
     "type": "checkbox",
     "label": "Use custom name bar color",
@@ -22,7 +34,12 @@
   },
   "showEventKind": {
     "type": "checkbox",
-    "label": "Petit badge event",
+    "label": "Afficher les pilules (SUB, FOLLOW...)",
+    "value": true
+  },
+  "highlightMentions": {
+    "type": "checkbox",
+    "label": "Highlight @mentions (contour dor\u00e9)",
     "value": true
   },
   "nameBg": {
