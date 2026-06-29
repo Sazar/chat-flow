@@ -131,18 +131,33 @@ function parseTestEmotes(text){
   return out.replace(/\n/g,'<br>');
 }
 
-function renderText(data,isTest){
+/* ---- MENTIONS ---- */
+function hasMention(text){
+  return /@\w+/.test(String(text||''));
+}
+function highlightMentionText(html){
+  return html.replace(/@(\w+)/g,'<span class="mention-tag">@$1</span>');
+}
+
+function renderText(data, isTest, applyMentionHighlight){
   var rawText=String(data.text||data.messageRaw||(data.message&&data.message.text)||'');
-  if(isTest) return parseTestEmotes(rawText);
-  var fromDirect=renderFromPositions(rawText,data&&data.emotes,function(em){
-    if(em.urls) return em.urls['2']||em.urls['1']||em.urls['4']||Object.values(em.urls)[0]||'';
-    if(em.id)   return 'https://static-cdn.jtvnw.net/emoticons/v2/'+em.id+'/default/dark/3.0';
-    return '';
-  });
-  if(fromDirect) return injectThirdParty(fromDirect);
-  var fromFragments=renderFragments(data.message||data);
-  if(fromFragments) return injectThirdParty(fromFragments);
-  return injectThirdParty(esc(rawText).replace(/\n/g,'<br>'));
+  var html;
+  if(isTest){
+    html = parseTestEmotes(rawText);
+  } else {
+    var fromDirect=renderFromPositions(rawText,data&&data.emotes,function(em){
+      if(em.urls) return em.urls['2']||em.urls['1']||em.urls['4']||Object.values(em.urls)[0]||'';
+      if(em.id)   return 'https://static-cdn.jtvnw.net/emoticons/v2/'+em.id+'/default/dark/3.0';
+      return '';
+    });
+    if(fromDirect){ html = injectThirdParty(fromDirect); }
+    else {
+      var fromFragments=renderFragments(data.message||data);
+      html = fromFragments ? injectThirdParty(fromFragments) : injectThirdParty(esc(rawText).replace(/\n/g,'<br>'));
+    }
+  }
+  if(applyMentionHighlight) html = highlightMentionText(html);
+  return html;
 }
 
 /* ---- ICONE PRIME base64 ---- */
@@ -238,9 +253,11 @@ function addItem(opts){
   if(opts.type==='event'){
     el=createEventEl(opts.name||'viewer',opts.kind||'',opts.desc||'',opts.message||'',opts.isTest||false);
   } else {
+    var rawText = String((opts.data&&opts.data.text)||opts.text||'');
+    var doMention = (fd.highlightMentions !== false) && hasMention(rawText);
     el=document.createElement('div');
-    el.className='item'+(opts.alt?' alt':'');
-    var body=renderText(opts.data||{text:opts.text||''},opts.isTest||false);
+    el.className='item'+(opts.alt?' alt':'')+(doMention?' mention':'');
+    var body=renderText(opts.data||{text:opts.text||''},opts.isTest||false, doMention);
     el.innerHTML='<div class="topline"><span class="name" style="color:'+esc(opts.color||'inherit')+'">'+esc(opts.name||'viewer')+'</span><span class="badges">'+badgeIcons(opts.badges||[])+'</span></div><div class="bubble">'+body+'</div>';
   }
   feed.appendChild(el);
@@ -252,21 +269,22 @@ function addItem(opts){
 function testSequence(){
   var TB=[{url:'https://static-cdn.jtvnw.net/badges/v1/a3259b9d-5cfb-420a-ab9c-f8579d35c883/1'},{url:'https://static-cdn.jtvnw.net/badges/v1/963b2afc-d913-41ab-b07d-67f74854c710/1'}];
   var seq=[
-    {type:'chat',  name:'HS_Hero',     text:"I'm dying Kappa LUL",        badges:TB, twitchColor:'#FF4500'},
+    {type:'chat',  name:'HS_Hero',     text:"I'm dying Kappa LUL",              badges:TB, twitchColor:'#FF4500'},
     {type:'event', name:'ApexAce',     kind:'SUB',         desc:"s'abonne pour le 1er mois !"},
+    {type:'chat',  name:'Viewer42',    text:'@HS_Hero t\'es trop fort !',        badges:[], twitchColor:'#9147ff'},
     {type:'event', name:'PrimeGuy',    kind:'SUB_PRIME',   desc:"s'abonne avec Prime pour le 1er mois !"},
-    {type:'event', name:'NightOwl',    kind:'RESUB_T2',    desc:'se r\u00e9abonne pour le 6\u00e8me mois !', message:'Toujours l\u00e0 PogChamp'},
-    {type:'event', name:'LegendPro',   kind:'SUB_T3',      desc:"s'abonne pour le 1er mois !",              message:'Le meilleur stream Kappa'},
-    {type:'event', name:'OldPrime',    kind:'RESUB_PRIME', desc:'se r\u00e9abonne avec Prime pour le 3\u00e8me mois !'},
-    {type:'chat',  name:'RocketRacer', text:'So close! BibleThump',        badges:TB, twitchColor:'#1E90FF'},
-    {type:'event', name:'PixelPirate', kind:'FOLLOW',      desc:'vient de follow la cha\u00eene !'},
-    {type:'event', name:'GiftKing',    kind:'CGIFT',       desc:'offre 5 sub gifts \u00e0 la communaut\u00e9 !'},
-    {type:'event', name:'BitsDude',    kind:'CHEER',       desc:'a envoy\u00e9 500 bits !'},
+    {type:'event', name:'NightOwl',    kind:'RESUB_T2',    desc:'se réabonne pour le 6ème mois !', message:'Toujours là PogChamp'},
+    {type:'event', name:'LegendPro',   kind:'SUB_T3',      desc:"s'abonne pour le 1er mois !",      message:'Le meilleur stream Kappa'},
+    {type:'event', name:'OldPrime',    kind:'RESUB_PRIME', desc:'se réabonne avec Prime pour le 3ème mois !'},
+    {type:'chat',  name:'RocketRacer', text:'So close! BibleThump',              badges:TB, twitchColor:'#1E90FF'},
+    {type:'event', name:'PixelPirate', kind:'FOLLOW',      desc:'vient de follow la chaîne !'},
+    {type:'event', name:'GiftKing',    kind:'CGIFT',       desc:'offre 5 sub gifts à la communauté !'},
   ];
   seq.forEach(function(it,i){
     setTimeout(function(){
       addItem({type:it.type,name:it.name,kind:it.kind||'',desc:it.desc||'',message:it.message||'',
-        color:resolveNameColor(it.twitchColor||''),alt:i%2===1,data:{text:it.text||''},badges:it.badges||[],isTest:true});
+        color:resolveNameColor(it.twitchColor||''),alt:i%2===1,
+        data:{text:it.text||''},badges:it.badges||[],isTest:true});
     },i*900);
   });
 }
@@ -302,7 +320,7 @@ window.addEventListener('onEventReceived',function(obj){
   var evName=event.name||data.displayName||data.name||'Someone';
 
   if(listener==='follower-latest')
-    addItem({type:'event',name:evName,kind:'FOLLOW',desc:'vient de follow la cha\u00eene !'});
+    addItem({type:'event',name:evName,kind:'FOLLOW',desc:'vient de follow la chaîne !'});
 
   if(listener==='subscriber-latest'){
     var isBulk=data.bulkGifted===true;
@@ -312,33 +330,32 @@ window.addEventListener('onEventReceived',function(obj){
     var isPrime=(tierRaw==='Prime'||tierRaw==='prime'||data.prime===true);
     var subMsg=data.message||'';
     var tierSuffix=isPrime?'_PRIME':tierRaw==='3000'?'_T3':tierRaw==='2000'?'_T2':'';
-
     if(isBulk){
       var qty=data.amount||1;
       addItem({type:'event',name:sender||evName,kind:'CGIFT',
-        desc:'offre '+qty+' sub'+(qty>1?'s':'')+' \u00e0 la communaut\u00e9 !'});
+        desc:'offre '+qty+' sub'+(qty>1?'s':'')+' à la communauté !'});
     } else if(isGifted){
       var recipient=data.name||data.displayName||'';
       addItem({type:'event',name:sender||evName,kind:'GIFT',
-        desc:recipient?'offre un sub gift \u00e0 '+recipient+' !':'offre un sub gift !'});
+        desc:recipient?'offre un sub gift à '+recipient+' !':'offre un sub gift !'});
     } else {
       var months=parseInt(data.months||data.streak||data.amount||event.amount||1,10);
       if(isNaN(months)||months<1) months=1;
       var isResub=months>1;
       var kind=(isResub?'RESUB':'SUB')+tierSuffix;
       var monthStr=isPrime
-        ?(isResub?'se r\u00e9abonne avec Prime pour le '+months+'\u00e8me mois':"s'abonne avec Prime pour le 1er mois")
-        :(isResub?'se r\u00e9abonne pour le '+months+'\u00e8me mois':"s'abonne pour le 1er mois");
+        ?(isResub?'se réabonne avec Prime pour le '+months+'ème mois':"s'abonne avec Prime pour le 1er mois")
+        :(isResub?'se réabonne pour le '+months+'ème mois':"s'abonne pour le 1er mois");
       addItem({type:'event',name:evName,kind:kind,desc:monthStr+' !',message:subMsg});
     }
   }
 
   if(listener==='cheer-latest')
-    addItem({type:'event',name:evName,kind:'CHEER',desc:'a envoy\u00e9 '+(data.amount||event.amount||'')+' bits !'});
+    addItem({type:'event',name:evName,kind:'CHEER',desc:'a envoyé '+(data.amount||event.amount||'')+' bits !'});
 
   if(listener==='raid-latest'){
     var viewers=data.amount||data.viewers||event.amount||0;
-    addItem({type:'event',name:evName,kind:'RAID',desc:'d\u00e9barque avec '+viewers+' viewer'+(viewers>1?'s':'')+' !'});
+    addItem({type:'event',name:evName,kind:'RAID',desc:'débarque avec '+viewers+' viewer'+(viewers>1?'s':'')+' !'});
   }
 
   if(listener==='tip-latest'){
