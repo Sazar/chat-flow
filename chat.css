@@ -80,10 +80,7 @@ html, body{
 }
 
 /* ---- EVENT ---- */
-.item.event{
-  width:fit-content;
-  max-width:100%;
-}
+.item.event{ width:fit-content; max-width:100%; }
 
 .item.event .topline{
   display:inline-flex;
@@ -102,22 +99,18 @@ html, body{
 
 .item.event .ev-icon{
   font-size:21px; line-height:1; flex:0 0 auto;
+  display:inline-flex; align-items:center;
+}
+.item.event .ev-icon .ev-icon-img{
+  width:22px; height:22px; display:block;
 }
 
-.item.event .ev-name{
-  font-weight:900; flex:0 0 auto;
-}
-
-.item.event .ev-desc{
-  font-weight:500;
-  opacity:0.88;
-  flex:1 1 auto;
-  word-break:break-word;
-}
+.item.event .ev-name{ font-weight:900; flex:0 0 auto; }
+.item.event .ev-desc{ font-weight:500; opacity:0.88; flex:1 1 auto; word-break:break-word; }
 
 /* ================================================================
    PILULE ev-kind
-   ================================================================ */
+================================================================ */
 .item.event .ev-kind{
   position:relative;
   font-size:10px;
@@ -135,72 +128,60 @@ html, body{
   overflow:visible;
 }
 
-/* ================================================================
-   TIER 2 — Option C : pulse glow violet
-   ================================================================ */
+/* ---- Tier 2 : pulse violet ---- */
 .item.event .ev-kind.tier2{
   background:#7c3aed;
   color:#ffffff;
   animation: pulse-t2 2.2s ease-in-out infinite;
 }
-
 @keyframes pulse-t2{
   0%,100% { box-shadow: 0 0 6px 1px rgba(124,58,237,.5), 0 0 14px 3px rgba(124,58,237,.25); }
   50%      { box-shadow: 0 0 14px 4px rgba(167,109,255,.85), 0 0 28px 8px rgba(124,58,237,.4); }
 }
 
-/* ================================================================
-   TIER 3 — Option C+D : pulse glow doré + sparkles
-   ================================================================ */
+/* ---- Tier 3 : pulse dore + sparkles ---- */
 .item.event .ev-kind.tier3{
   background:linear-gradient(135deg,#d97706,#f59e0b);
   color:#1a0a00;
   animation: pulse-t3 1.8s ease-in-out infinite;
-  /* espace pour les sparkles autour */
   margin:6px 6px 6px 10px;
 }
-
 @keyframes pulse-t3{
   0%,100% { box-shadow: 0 0 8px 2px rgba(245,158,11,.55), 0 0 20px 5px rgba(217,119,6,.3); }
   50%      { box-shadow: 0 0 18px 6px rgba(251,191,36,.95), 0 0 36px 12px rgba(245,158,11,.5); }
 }
-
-/* Sparkles via pseudo-elements */
 .item.event .ev-kind.tier3::before,
 .item.event .ev-kind.tier3::after{
-  content:'✦';
+  content:'\2726';
   position:absolute;
   font-size:9px;
   color:#fde68a;
   pointer-events:none;
   animation: sparkle-spin 2.4s ease-in-out infinite;
 }
-
-.item.event .ev-kind.tier3::before{
-  top:-7px; right:-6px;
-  animation-delay:0s;
-}
-
-.item.event .ev-kind.tier3::after{
-  bottom:-7px; left:-5px;
-  animation-delay:1.2s;
-}
-
+.item.event .ev-kind.tier3::before{ top:-7px; right:-6px; animation-delay:0s; }
+.item.event .ev-kind.tier3::after{  bottom:-7px; left:-5px; animation-delay:1.2s; }
 @keyframes sparkle-spin{
-  0%   { opacity:0;   transform:scale(.4) rotate(0deg); }
-  30%  { opacity:1;   transform:scale(1.2) rotate(90deg); }
-  60%  { opacity:.7;  transform:scale(1) rotate(180deg); }
-  100% { opacity:0;   transform:scale(.4) rotate(360deg); }
+  0%   { opacity:0;  transform:scale(.4) rotate(0deg); }
+  30%  { opacity:1;  transform:scale(1.2) rotate(90deg); }
+  60%  { opacity:.7; transform:scale(1) rotate(180deg); }
+  100% { opacity:0;  transform:scale(.4) rotate(360deg); }
 }
 
-/* Sparkle supplementaire via un wrapper injecte en JS */
-.tier3-spark{
-  position:absolute;
-  font-size:8px;
-  color:#fbbf24;
-  pointer-events:none;
-  animation: sparkle-spin 2s ease-in-out infinite;
-  animation-delay:.6s;
+/* ---- Prime : shimmer bleu cyan ---- */
+.item.event .ev-kind.prime{
+  background: linear-gradient(135deg, #0070e0, #00b4ff, #0070e0);
+  background-size: 200% 100%;
+  color: #ffffff;
+  animation: shimmer-prime 2.5s linear infinite, pulse-prime 2.5s ease-in-out infinite;
+}
+@keyframes shimmer-prime{
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+@keyframes pulse-prime{
+  0%,100% { box-shadow: 0 0 6px 1px rgba(0,180,255,.45), 0 0 14px 3px rgba(0,112,224,.2); }
+  50%      { box-shadow: 0 0 14px 5px rgba(0,180,255,.9), 0 0 28px 9px rgba(0,112,224,.45); }
 }
 
 @keyframes in{

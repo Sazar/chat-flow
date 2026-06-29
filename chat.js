@@ -166,15 +166,20 @@ function renderText(data, isTest){
   return injectThirdParty(esc(rawText).replace(/\n/g,'<br>'));
 }
 
-/* ---- OPTION B : icone selon le tier ---- */
+/* ---- ICONE PRIME SVG inline ---- */
+var PRIME_ICON_SVG = '<img class="ev-icon-img" src="prime.svg" alt="Prime">';
+
+/* ---- ICONES EVENEMENTS ---- */
 var EVENT_ICONS = {
   FOLLOW:   String.fromCodePoint(0x1F49C),
-  SUB:      String.fromCodePoint(0x2B50),           /* ⭐ tier 1 */
-  SUB_T2:   String.fromCodePoint(0x1F31F),          /* 🌟 tier 2 */
-  SUB_T3:   String.fromCodePoint(0x1F48E),          /* 💎 tier 3 */
+  SUB:      String.fromCodePoint(0x2B50),
+  SUB_T2:   String.fromCodePoint(0x1F31F),
+  SUB_T3:   String.fromCodePoint(0x1F48E),
   RESUB:    String.fromCodePoint(0x2B50),
   RESUB_T2: String.fromCodePoint(0x1F31F),
   RESUB_T3: String.fromCodePoint(0x1F48E),
+  SUB_PRIME:   null,  /* SVG inline */
+  RESUB_PRIME: null,
   GIFT:     String.fromCodePoint(0x1F381),
   CGIFT:    String.fromCodePoint(0x1F381),
   CHEER:    String.fromCodePoint(0x1F48E),
@@ -182,10 +187,10 @@ var EVENT_ICONS = {
   TIP:      String.fromCodePoint(0x1F4B8),
 };
 
-/* ---- OPTION C : label + classe CSS pour couleur pilule ---- */
 function kindLabel(kind) {
   var labels = {
     SUB:'SUB', SUB_T2:'SUB T2', SUB_T3:'SUB T3',
+    SUB_PRIME:'PRIME', RESUB_PRIME:'PRIME',
     RESUB:'RESUB', RESUB_T2:'RESUB T2', RESUB_T3:'RESUB T3',
     FOLLOW:'FOLLOW', GIFT:'GIFT', CGIFT:'GIFT',
     CHEER:'CHEER', RAID:'RAID', TIP:'TIP',
@@ -194,22 +199,28 @@ function kindLabel(kind) {
 }
 
 function kindTierClass(kind) {
-  if (kind === 'SUB_T2' || kind === 'RESUB_T2') return 'tier2';
-  if (kind === 'SUB_T3' || kind === 'RESUB_T3') return 'tier3';
+  if (kind === 'SUB_T2'    || kind === 'RESUB_T2')    return 'tier2';
+  if (kind === 'SUB_T3'    || kind === 'RESUB_T3')    return 'tier3';
+  if (kind === 'SUB_PRIME' || kind === 'RESUB_PRIME') return 'prime';
   return '';
 }
 
 function createEventEl(name, kind, desc, message, isTest) {
-  var icon = EVENT_ICONS[kind] || String.fromCodePoint(0x2728);
+  var isPrime = (kind === 'SUB_PRIME' || kind === 'RESUB_PRIME');
   var el = document.createElement('div');
   el.className = 'item event';
 
   var topline = document.createElement('div');
   topline.className = 'topline';
 
+  /* icone */
   var iconSpan = document.createElement('span');
   iconSpan.className = 'ev-icon';
-  iconSpan.textContent = icon;
+  if (isPrime) {
+    iconSpan.innerHTML = PRIME_ICON_SVG;
+  } else {
+    iconSpan.textContent = EVENT_ICONS[kind] || String.fromCodePoint(0x2728);
+  }
 
   var nameSpan = document.createElement('span');
   nameSpan.className = 'ev-name';
@@ -289,16 +300,16 @@ function testSequence(){
     { url: 'https://static-cdn.jtvnw.net/badges/v1/963b2afc-d913-41ab-b07d-67f74854c710/1' }
   ];
   var seq = [
-    { type:'chat',  name:'HS_Hero',     text:"I'm dying of laughter Kappa LUL", badges:TEST_BADGES, twitchColor:'#FF4500' },
-    { type:'event', name:'ApexAce',     kind:'SUB',      desc:"s'abonne pour le 1er mois !" },
-    { type:'event', name:'NightOwl',    kind:'RESUB_T2', desc:'se réabonne pour le 6ème mois !', message:'Toujours là PogChamp' },
-    { type:'event', name:'LegendPro',   kind:'SUB_T3',   desc:"s'abonne pour le 1er mois !",  message:'Le meilleur stream Kappa' },
-    { type:'chat',  name:'RocketRacer', text:'So close! BibleThump', badges:TEST_BADGES, twitchColor:'#1E90FF' },
-    { type:'event', name:'PixelPirate', kind:'FOLLOW',   desc:'vient de follow la chaîne !' },
-    { type:'event', name:'GiftKing',    kind:'GIFT',     desc:'offre un sub gift à PixelFox !' },
-    { type:'event', name:'GiftKing',    kind:'CGIFT',    desc:'offre 5 sub gifts à la communauté !' },
-    { type:'event', name:'BitsDude',    kind:'CHEER',    desc:'a envoyé 500 bits !' },
-    { type:'event', name:'TipGuy',      kind:'TIP',      desc:'a fait un don de 10 EUR !', message:'Super stream !' },
+    { type:'chat',  name:'HS_Hero',      text:"I'm dying of laughter Kappa LUL", badges:TEST_BADGES, twitchColor:'#FF4500' },
+    { type:'event', name:'ApexAce',      kind:'SUB',         desc:"s'abonne pour le 1er mois !" },
+    { type:'event', name:'PrimeGuy',     kind:'SUB_PRIME',   desc:"s'abonne avec Prime pour le 1er mois !" },
+    { type:'event', name:'NightOwl',     kind:'RESUB_T2',    desc:'se r\u00e9abonne pour le 6\u00e8me mois !', message:'Toujours l\u00e0 PogChamp' },
+    { type:'event', name:'LegendPro',    kind:'SUB_T3',      desc:"s'abonne pour le 1er mois !", message:'Le meilleur stream Kappa' },
+    { type:'event', name:'OldPrime',     kind:'RESUB_PRIME', desc:'se r\u00e9abonne avec Prime pour le 3\u00e8me mois !' },
+    { type:'chat',  name:'RocketRacer',  text:'So close! BibleThump', badges:TEST_BADGES, twitchColor:'#1E90FF' },
+    { type:'event', name:'PixelPirate',  kind:'FOLLOW',      desc:'vient de follow la cha\u00eene !' },
+    { type:'event', name:'GiftKing',     kind:'CGIFT',       desc:'offre 5 sub gifts \u00e0 la communaut\u00e9 !' },
+    { type:'event', name:'BitsDude',     kind:'CHEER',       desc:'a envoy\u00e9 500 bits !' },
   ];
   seq.forEach(function(it, i){
     setTimeout(function(){
@@ -355,44 +366,57 @@ window.addEventListener('onEventReceived', function(obj){
   var evName = event.name || data.displayName || data.name || 'Someone';
 
   if (listener === 'follower-latest')
-    addItem({ type:'event', name:evName, kind:'FOLLOW', desc:'vient de follow la chaîne !' });
+    addItem({ type:'event', name:evName, kind:'FOLLOW', desc:'vient de follow la cha\u00eene !' });
 
   if (listener === 'subscriber-latest') {
     var isBulk   = data.bulkGifted === true;
     var isGifted = data.gifted === true;
     var sender   = data.sender || '';
     var tierRaw  = data.tier || data.subPlan || '';
-    var tierSuffix = tierRaw === '3000' ? '_T3' : tierRaw === '2000' ? '_T2' : '';
+    var isPrime  = (tierRaw === 'Prime' || tierRaw === 'prime' || data.prime === true);
     var subMsg   = data.message || '';
+
+    var tierSuffix;
+    if (isPrime)              tierSuffix = '_PRIME';
+    else if (tierRaw === '3000') tierSuffix = '_T3';
+    else if (tierRaw === '2000') tierSuffix = '_T2';
+    else                         tierSuffix = '';
 
     if (isBulk) {
       var qty = data.amount || 1;
       addItem({ type:'event', name: sender || evName, kind:'CGIFT',
-        desc: 'offre ' + qty + ' sub' + (qty > 1 ? 's' : '') + ' à la communauté !' });
+        desc: 'offre ' + qty + ' sub' + (qty > 1 ? 's' : '') + ' \u00e0 la communaut\u00e9 !' });
     } else if (isGifted) {
       var recipient = data.name || data.displayName || '';
       addItem({ type:'event', name: sender || evName, kind:'GIFT',
-        desc: recipient ? 'offre un sub gift à ' + recipient + ' !' : 'offre un sub gift !' });
+        desc: recipient ? 'offre un sub gift \u00e0 ' + recipient + ' !' : 'offre un sub gift !' });
     } else {
       var months = parseInt(data.months || data.streak || data.amount || event.amount || 1, 10);
       if (isNaN(months) || months < 1) months = 1;
       var isResub  = months > 1;
       var kind     = (isResub ? 'RESUB' : 'SUB') + tierSuffix;
-      var monthStr = months === 1
-        ? "s'abonne pour le 1er mois"
-        : 'se réabonne pour le ' + months + 'ème mois';
+      var monthStr;
+      if (isPrime) {
+        monthStr = isResub
+          ? 'se r\u00e9abonne avec Prime pour le ' + months + '\u00e8me mois'
+          : "s'abonne avec Prime pour le 1er mois";
+      } else {
+        monthStr = isResub
+          ? 'se r\u00e9abonne pour le ' + months + '\u00e8me mois'
+          : "s'abonne pour le 1er mois";
+      }
       addItem({ type:'event', name:evName, kind:kind, desc:monthStr + ' !', message:subMsg });
     }
   }
 
   if (listener === 'cheer-latest')
     addItem({ type:'event', name:evName, kind:'CHEER',
-      desc:'a envoyé ' + (data.amount || event.amount || '') + ' bits !' });
+      desc:'a envoy\u00e9 ' + (data.amount || event.amount || '') + ' bits !' });
 
   if (listener === 'raid-latest') {
     var viewers = data.amount || data.viewers || event.amount || 0;
     addItem({ type:'event', name:evName, kind:'RAID',
-      desc:'débarque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
+      desc:'d\u00e9barque avec ' + viewers + ' viewer' + (viewers > 1 ? 's' : '') + ' !' });
   }
 
   if (listener === 'tip-latest') {
