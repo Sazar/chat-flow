@@ -35,9 +35,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 #feed::-webkit-scrollbar{ display:none; }
 #feed{ scrollbar-width:none; }
 
-/* ============================================================
-   ITEM CHAT
-============================================================ */
+/* ---- ITEM chat ---- */
 .item{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
@@ -47,23 +45,17 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   max-height:400px;
 }
 .item.removing{
-  opacity:0;
-  transform:translateY(-12px) scale(.96);
-  max-height:0;
-  margin:0;
-  pointer-events:none;
+  opacity:0; transform:translateY(-12px) scale(.96);
+  max-height:0; margin:0; pointer-events:none;
 }
 .item:not(.event){ animation: in-chat .3s cubic-bezier(.2,.9,.2,1) both; }
 @keyframes in-chat{ from{ opacity:0; transform:translateY(8px) scale(.98); } to{ opacity:1; transform:translateY(0) scale(1); } }
 
-/* ============================================================
-   ITEM EVENT — filter:none pour éviter tout effet de débord
-============================================================ */
+/* ---- ITEM event ---- */
 .item.event{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
-  filter:none;
-  flex-shrink:0;
+  filter:none; flex-shrink:0;
 }
 
 .item.event.anim-slide    { animation: ev-slide .45s cubic-bezier(.2,.9,.2,1) both; }
@@ -112,17 +104,10 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   vertical-align:middle !important; margin:-2px 1px !important; display:inline-block !important;
 }
 
-/* ============================================================
-   MENTION HIGHLIGHT — couleur 100% pilotée par --highlight-color
-============================================================ */
+/* ---- MENTION HIGHLIGHT — bulle uniquement ---- */
 .item.mention .bubble{
   border:2px solid var(--highlight-color);
-  box-shadow:var(--shadow);
-}
-.item.mention .topline{
-  box-shadow:var(--shadow);
-  outline:2px solid var(--highlight-color);
-  outline-offset:0;
+  box-shadow:var(--shadow), 0 0 10px 2px color-mix(in srgb, var(--highlight-color) 40%, transparent);
 }
 .mention-tag{
   color:var(--highlight-color);
@@ -143,9 +128,9 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 .item.event .ev-name{ font-weight:900; flex:0 0 auto; }
 .item.event .ev-desc{ font-weight:500; opacity:0.88; flex:1 1 auto; word-break:break-word; }
 
-/* ============================================================
+/* ================================================================
    PILULES
-============================================================ */
+================================================================ */
 .item.event .ev-kind-wrap{
   flex:0 0 auto;
   margin-left:4px;
@@ -154,34 +139,60 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   border-radius:999px;
 }
 .item.event .ev-kind{
+  position:relative;
   display:inline-block;
   font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
   padding:5px 10px; border-radius:999px; line-height:1;
   white-space:nowrap;
   background:rgba(0,0,0,.22); color:inherit;
+  overflow:visible;
 }
 
-/* Tier 2 : pulse violet */
+/* Tier 2 — pulse violet */
 .item.event .ev-kind.tier2{
   background:#7c3aed; color:#ffffff;
-  animation:pulse-t2 2.2s ease-in-out infinite;
+  animation: pulse-t2 2.2s ease-in-out infinite;
 }
 @keyframes pulse-t2{
   0%,100%{ box-shadow:0 0 6px 1px rgba(124,58,237,.5),0 0 14px 3px rgba(124,58,237,.25); }
   50%{ box-shadow:0 0 14px 4px rgba(167,109,255,.85),0 0 28px 8px rgba(124,58,237,.4); }
 }
 
-/* Tier 3 : liseré doré fixe, SANS animation ni filter */
+/* Tier 3 — pulse doré + sparkles */
 .item.event .ev-kind.tier3{
-  background:linear-gradient(135deg, #92400e, #b45309, #d97706);
-  color:#fef3c7;
-  outline:2px solid #fde68a;
-  outline-offset:1px;
-  font-weight:900;
-  letter-spacing:.1em;
+  background:linear-gradient(135deg,#d97706,#f59e0b);
+  color:#1a0a00;
+  animation: pulse-t3 1.8s ease-in-out infinite;
+  margin:6px 6px 6px 10px;
+}
+@keyframes pulse-t3{
+  0%,100%{ box-shadow:0 0 8px 2px rgba(245,158,11,.55),0 0 20px 5px rgba(217,119,6,.3); }
+  50%{ box-shadow:0 0 18px 6px rgba(251,191,36,.95),0 0 36px 12px rgba(245,158,11,.5); }
+}
+.item.event .ev-kind.tier3::before,
+.item.event .ev-kind.tier3::after{
+  content:'✦';
+  position:absolute;
+  font-size:9px; color:#fde68a;
+  pointer-events:none;
+  animation: sparkle-spin 2.4s ease-in-out infinite;
+}
+.item.event .ev-kind.tier3::before{ top:-7px; right:-6px; animation-delay:0s; }
+.item.event .ev-kind.tier3::after{ bottom:-7px; left:-5px; animation-delay:1.2s; }
+@keyframes sparkle-spin{
+  0%  { opacity:0;  transform:scale(.4) rotate(0deg); }
+  30% { opacity:1;  transform:scale(1.2) rotate(90deg); }
+  60% { opacity:.7; transform:scale(1) rotate(180deg); }
+  100%{ opacity:0;  transform:scale(.4) rotate(360deg); }
+}
+.tier3-spark{
+  position:absolute; font-size:8px; color:#fbbf24;
+  pointer-events:none;
+  animation: sparkle-spin 2s ease-in-out infinite;
+  animation-delay:.6s;
 }
 
-/* Prime : bleu fixe */
+/* Prime — bleu fixe */
 .item.event .ev-kind.prime{
   background:linear-gradient(135deg,#0070e0,#00b4ff);
   color:#ffffff;
