@@ -109,11 +109,11 @@ async function loadThirdPartyEmotes(channelId){
   }catch(e){}
 }
 
-function injectThirdParty(html){
-  return html.replace(/([^<>\s]+)/g,function(tok){
-    if(thirdPartyEmotes[tok]) return '<img class="emote" src="'+esc(thirdPartyEmotes[tok])+'" alt="'+esc(tok)+'" onerror="this.remove()">';
-    return tok;
-  });
+function injectThirdPartyText(text){
+  return String(text||'').split(/(\s+)/).map(function(tok){
+    if (/^\s+$/.test(tok)) return tok;
+    return thirdPartyEmotes[tok] ? '<img class="emote" src="'+esc(thirdPartyEmotes[tok])+'" alt="'+esc(tok)+'" onerror="this.remove()">' : esc(tok);
+  }).join('').replace(/\n/g,'<br>');
 }
 
 function parseTestEmotes(text){
@@ -137,24 +137,25 @@ function shouldHighlightMessage(text){
 function highlightMentionText(html){
   var target = normalizeMentionTarget();
   if (!target) return html;
-  var re = new RegExp('@(' + target.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')','ig');
-  return html.replace(re,'<span class="mention-tag">@$1</span>');
+  var re = new RegExp('(^|[^\\w])@(' + target.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')(?=$|[^\\w])','ig');
+  return html.replace(re,'$1<span class="mention-tag">@$2</span>');
 }
 
 function renderText(data, isTest, applyMentionHighlight){
   var rawText=String(data.text||data.messageRaw||(data.message&&data.message.text)||'');
   var html;
-  if(isTest){ html = parseTestEmotes(rawText); }
-  else {
+  if(isTest){
+    html = parseTestEmotes(rawText);
+  } else {
     var fromDirect=renderFromPositions(rawText,data&&data.emotes,function(em){
       if(em.urls) return em.urls['2']||em.urls['1']||em.urls['4']||Object.values(em.urls)[0]||'';
       if(em.id) return 'https://static-cdn.jtvnw.net/emoticons/v2/'+em.id+'/default/dark/3.0';
       return '';
     });
-    if(fromDirect) html = injectThirdParty(fromDirect);
+    if(fromDirect) html = fromDirect;
     else {
       var fromFragments=renderFragments(data.message||data);
-      html = fromFragments ? injectThirdParty(fromFragments) : injectThirdParty(esc(rawText).replace(/\n/g,'<br>'));
+      html = fromFragments || injectThirdPartyText(rawText);
     }
   }
   if(applyMentionHighlight) html = highlightMentionText(html);
@@ -194,9 +195,23 @@ function createEventEl(name,kind,desc,message,isTest){
   var descSpan=document.createElement('span'); descSpan.className='ev-desc'; descSpan.textContent=desc;
   topline.appendChild(iconSpan); topline.appendChild(nameSpan); topline.appendChild(descSpan);
   var showKind=(fd.showEventKind===undefined)?true:(fd.showEventKind===true);
-  if(showKind){ var kindSpan=document.createElement('span'); var tc=kindTierClass(kind); kindSpan.className='ev-kind'+(tc?' '+tc:''); kindSpan.textContent=kindLabel(kind); topline.appendChild(kindSpan); }
+  if(showKind){
+    var wrap=document.createElement('span');
+    wrap.className='ev-kind-wrap';
+    var kindSpan=document.createElement('span');
+    var tc=kindTierClass(kind);
+    kindSpan.className='ev-kind'+(tc?' '+tc:'');
+    kindSpan.textContent=kindLabel(kind);
+    wrap.appendChild(kindSpan);
+    topline.appendChild(wrap);
+  }
   el.appendChild(topline);
-  if(message&&message.trim()){ var bubble=document.createElement('div'); bubble.className='bubble'; bubble.innerHTML=isTest?parseTestEmotes(message):injectThirdParty(esc(message).replace(/\n/g,'<br>')); el.appendChild(bubble); }
+  if(message&&message.trim()){
+    var bubble=document.createElement('div');
+    bubble.className='bubble';
+    bubble.innerHTML=isTest?parseTestEmotes(message):renderText({text:message},false,false);
+    el.appendChild(bubble);
+  }
   return el;
 }
 
