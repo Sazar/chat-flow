@@ -14,12 +14,19 @@
 
 html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transparent; font-family:var(--font); }
 
+/* En mode horizontal on a besoin que body soit position:relative
+   et que le feed puisse sortir des limites du #widget */
+body.layout-horizontal{ overflow:visible; }
+
 #widget{
   width:600px; height:900px;
   position:relative; overflow:hidden;
   background:transparent;
   transform:scale(var(--scale)); transform-origin:top left;
 }
+
+/* Quand horizontal : on laisse le feed déborder */
+#widget.layout-horizontal{ overflow:visible; }
 
 #widget.theme-monster{ --name-bg:#befe2b; --name-text:#111111; --bubble-bg:#2b2d39; --bubble-bg-2:#242633; --bubble-text:#f6fbff; }
 #widget.theme-pastel{  --name-bg:#ffccf2; --name-text:#2b2140; --bubble-bg:#f7f0ff; --bubble-bg-2:#efe7ff; --bubble-text:#3b2b58; }
@@ -43,16 +50,16 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    FEED — MODE HORIZONTAL
-   position:fixed échappe au clip du #widget (600px).
-   width:100vw = toute la largeur de l’iframe SE = toute la zone configurée.
-   Les items gardent leur taille naturelle (pas de flex-stretch).
-   overflow:hidden masque ce qui dépasse à gauche quand trop de messages.
+   position:fixed sur le body pour échapper au clip du #widget.
+   Le #widget a overflow:visible quand layout-horizontal.
+   width:100vw = toute la largeur de l'iframe SE.
 ================================================================ */
 #feed.layout-horizontal{
   position:fixed;
   bottom:0; left:0; top:auto;
   height:auto;
   width:100vw;
+  max-width:100vw;
   flex-direction:row;
   justify-content:flex-end;
   align-items:flex-end;
@@ -61,6 +68,9 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   gap:8px;
   padding:12px 14px;
   box-sizing:border-box;
+  /* Annule le transform hérité du #widget scale */
+  transform:none;
+  zoom:1;
 }
 
 /* ================================================================
@@ -76,22 +86,33 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 }
 
 /* ================================================================
-   ANIMATION SORTIE VERTICALE — monte + s’estompe
+   ANIMATION SORTIE VERTICALE — monte + s'estompe progressivement
+   Durée : 0.8s. L'opacité s'étire jusqu'à 80% pour un fondu doux.
 ================================================================ */
 @keyframes fade-up-out{
-  0%   { opacity:1; transform:translateY(0);      max-height:400px; margin-bottom:0;  }
-  60%  { opacity:0; transform:translateY(-40px);  max-height:400px; margin-bottom:0;  }
-  100% { opacity:0; transform:translateY(-60px);  max-height:0;     margin-bottom:-10px; }
+  0%   { opacity:1;    transform:translateY(0);      max-height:400px; margin-bottom:0;     }
+  30%  { opacity:0.7;  transform:translateY(-15px);  max-height:400px; margin-bottom:0;     }
+  70%  { opacity:0.1;  transform:translateY(-38px);  max-height:400px; margin-bottom:0;     }
+  85%  { opacity:0;    transform:translateY(-50px);  max-height:200px; margin-bottom:0;     }
+  100% { opacity:0;    transform:translateY(-60px);  max-height:0;     margin-bottom:-10px; }
 }
 
 .item.removing{
-  animation: fade-up-out .45s cubic-bezier(.4,0,.6,1) forwards;
+  animation: fade-up-out 0.8s cubic-bezier(.25,.1,.25,1) forwards;
   pointer-events:none;
   overflow:hidden !important;
+  /* Efface toutes les ombres (filter drop-shadow) pendant la sortie */
+  filter:none !important;
+}
+/* Les enfants de l'item en cours de suppression ne doivent plus avoir d'ombres */
+.item.removing .topline,
+.item.removing .bubble{
+  box-shadow:none !important;
+  filter:none !important;
 }
 
 /* ================================================================
-   SORTIE HORIZONTALE — glisse à gauche + s’estompe
+   SORTIE HORIZONTALE — glisse à gauche + s'estompe
 ================================================================ */
 @keyframes fade-left-out{
   0%   { opacity:1; transform:translateX(0);     max-width:400px; margin-right:0; }

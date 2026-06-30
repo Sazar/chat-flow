@@ -57,8 +57,12 @@ function applyThemeVars(){
     var layout = String(fd.chatLayout || 'vertical').toLowerCase();
     if (layout === 'horizontal') {
       feed.classList.add('layout-horizontal');
+      w.classList.add('layout-horizontal');
+      document.body.classList.add('layout-horizontal');
     } else {
       feed.classList.remove('layout-horizontal');
+      w.classList.remove('layout-horizontal');
+      document.body.classList.remove('layout-horizontal');
     }
   }
 }
@@ -287,7 +291,8 @@ function removeOldestIfNeeded(feed){
     var old = feed.firstElementChild;
     if(!old) break;
     old.classList.add('removing');
-    setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 480);
+    /* Durée synchro avec l'animation CSS la plus longue (0.8s vertical) */
+    setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 850);
     break;
   }
 }
