@@ -50,7 +50,6 @@ function applyThemeVars(){
   var color2 = useCustom && fd.nameBg2 ? fd.nameBg2 : '';
 
   if (color2) {
-    /* Gradient : on stocke la valeur dans --name-bg directement sous forme de gradient */
     w.style.setProperty('--name-bg', 'linear-gradient(90deg, ' + color1 + ', ' + color2 + ')');
   } else {
     w.style.setProperty('--name-bg', color1);
@@ -300,7 +299,8 @@ function removeOldestIfNeeded(feed){
     var old = feed.firstElementChild;
     if(!old) break;
     old.classList.add('removing');
-    setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 850);
+    /* Syncé avec l'animation fade-up-out : 1s */
+    setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 1050);
     break;
   }
 }
