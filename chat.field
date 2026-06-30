@@ -83,6 +83,11 @@
     "label": "Name bar color",
     "value": "#befe2b"
   },
+  "nameBg2": {
+    "type": "colorpicker",
+    "label": "Name bar color 2 (gradient, optionnel)",
+    "value": ""
+  },
   "nameText": {
     "type": "colorpicker",
     "label": "Name text color",

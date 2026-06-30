@@ -47,8 +47,6 @@ body.layout-horizontal{ overflow:visible; }
 
 /* ================================================================
    FEED — MODE HORIZONTAL
-   gap:0 + margin-right sur chaque item pour contourner
-   tout collapse de gap sur les items sans bubble
 ================================================================ */
 #feed.layout-horizontal{
   position:fixed;
@@ -136,8 +134,6 @@ body.layout-horizontal{ overflow:visible; }
 
 /* ================================================================
    ITEMS MODE HORIZONTAL — espacement via margin-right
-   Chaque item (chat ou event) reçoit margin-right:10px.
-   Le dernier enfant reçoit margin-right:0 via :last-child.
 ================================================================ */
 #feed.layout-horizontal .item{
   margin-right:10px;
@@ -161,7 +157,6 @@ body.layout-horizontal{ overflow:visible; }
   overflow:visible;
 }
 
-/* Pseudo */
 #feed.layout-horizontal .item:not(.event) .topline{
   flex-shrink:0;
   border-radius:9px;
@@ -177,7 +172,6 @@ body.layout-horizontal{ overflow:visible; }
   box-shadow:none;
 }
 
-/* Bubble texte */
 #feed.layout-horizontal .item:not(.event) .bubble{
   flex:1 1 auto;
   min-width:0;
@@ -198,6 +192,7 @@ body.layout-horizontal{ overflow:visible; }
 
 /* ================================================================
    ITEM EVENT — MODE HORIZONTAL
+   Même taille que les bulles chat classiques
 ================================================================ */
 #feed.layout-horizontal .item.event{
   flex-direction:row !important;
@@ -213,9 +208,12 @@ body.layout-horizontal{ overflow:visible; }
 #feed.layout-horizontal .item.event .topline{
   flex-shrink:0;
   border-radius:9px;
+  /* Même taille que topline chat */
   font-size:13px;
-  padding:8px 14px;
-  gap:7px;
+  padding:8px 13px;
+  line-height:1.25;
+  font-weight:800;
+  gap:6px;
   flex-wrap:nowrap;
   white-space:nowrap;
   position:relative;
@@ -232,13 +230,14 @@ body.layout-horizontal{ overflow:visible; }
   min-width:0;
   margin:0 !important;
   border-radius:9px;
+  /* Même taille que bubble chat */
   padding:8px 14px 8px 22px;
   font-size:13px;
   line-height:1.25;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:220px;
+  max-width:260px;
   display:flex;
   align-items:center;
   position:relative;
@@ -247,9 +246,15 @@ body.layout-horizontal{ overflow:visible; }
   filter:none;
 }
 
-/* Event sans bubble en horizontal : topline sans margin-right négatif */
+/* Event sans bubble : topline sans margin-right négatif */
 #feed.layout-horizontal .item.event:not(:has(.bubble)) .topline{
   margin-right:0;
+}
+
+/* Icône event en horizontal : même taille que le texte */
+#feed.layout-horizontal .item.event .ev-icon{
+  font-size:13px;
+  line-height:1;
 }
 
 /* ---- ITEM event (vertical) ---- */
