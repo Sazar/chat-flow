@@ -152,25 +152,14 @@ function trimReplyText(text){
   return String(text || '').replace(/\s+/g,' ').trim().slice(0, 110);
 }
 
-/**
- * Extrait les métadonnées de reply depuis toutes les sources possibles :
- * 1. data.tags (tags IRC Twitch bruts via SE)
- * 2. champs plats camelCase (SE legacy)
- * 3. champs kebab-case (IRC brut)
- * 4. objet data.reply imbriqué (EventSub)
- */
 function extractReplyMeta(data){
   if (fd.showReplies === false) return null;
-
-  // --- Source 1 : data.tags (clé la plus fiable sur le vrai stream SE) ---
   var tags = data.tags || (data.message && data.message.tags) || null;
   if (tags && typeof tags === 'object') {
     var tu = tags['reply-parent-display-name'] || tags['reply-parent-user-login'] || tags['replyParentDisplayName'] || tags['replyParentUserLogin'] || '';
     var tt = tags['reply-parent-msg-body'] || tags['replyParentMsgBody'] || tags['reply-parent-message'] || '';
     if (tu || tt) return { user: tu || '?', text: trimReplyText(tt) };
   }
-
-  // --- Source 2 : champs plats camelCase / kebab-case directement sur data ---
   var flatUser =
     data.replyParentDisplayName ||
     data.replyParentUserDisplayName ||
@@ -186,22 +175,19 @@ function extractReplyMeta(data){
     data.replyParentText ||
     data['reply-parent-msg-body'] || '';
   if (flatUser || flatText) return { user: flatUser || '?', text: trimReplyText(flatText) };
-
-  // --- Source 3 : objet imbriqué data.reply (EventSub) ---
   var r = data.reply || (data.message && data.message.reply) || null;
   if (r) {
     var u = r.parentDisplayName || r.parentUserDisplayName || r.parentUserLogin || r.parentUserName || r.parentName || '';
     var t = r.parentMessageBody || r.parentMsgBody || r.parentMessage || r.parentText || r.body || r.text || '';
     if (u || t) return { user: u || '?', text: trimReplyText(t) };
   }
-
   return null;
 }
 
 function buildReplyHtml(reply){
   if (!reply) return '';
   return '<div class="reply-ref"><div class="reply-ref-body">'+
-    '<div class="reply-ref-top">↩ En réponse à <span class="reply-ref-user">'+esc(reply.user)+'</span></div>'+
+    '<div class="reply-ref-top">\u21a9 En r\u00e9ponse \u00e0 <span class="reply-ref-user">'+esc(reply.user)+'</span></div>'+
     '<div class="reply-ref-text">'+esc(reply.text || '')+'</div>'+
     '</div></div>';
 }
@@ -262,9 +248,10 @@ function createEventEl(name,kind,desc,message,isTest){
   var showKind=(fd.showEventKind===undefined)?true:(fd.showEventKind===true);
   if(showKind){
     var wrap=document.createElement('span');
-    wrap.className='ev-kind-wrap';
-    var kindSpan=document.createElement('span');
     var tc=kindTierClass(kind);
+    // t3-wrap sur le parent pour porter l'animation dorée sans toucher au texte
+    wrap.className='ev-kind-wrap' + (tc==='tier3' ? ' t3-wrap' : '');
+    var kindSpan=document.createElement('span');
     kindSpan.className='ev-kind'+(tc?' '+tc:'');
     kindSpan.textContent=kindLabel(kind);
     wrap.appendChild(kindSpan);
@@ -285,7 +272,7 @@ function removeOldestIfNeeded(feed){
     var old = feed.firstElementChild;
     if(!old) break;
     old.classList.add('removing');
-    setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 280);
+    setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 340);
     break;
   }
 }
@@ -338,11 +325,11 @@ function testSequence(){
     {type:'chat',name:'Viewer42',text:'@streamer trop fort !',badges:[],twitchColor:'#9147ff'},
     {type:'chat',name:'NightOwl',text:"C'est tellement vrai lol",reply:{user:'HS_Hero',text:"I'm dying Kappa LUL"},badges:TB,twitchColor:'#a855f7'},
     {type:'event',name:'PrimeGuy',kind:'SUB_PRIME',desc:"s'abonne avec Prime pour le 1er mois !"},
-    {type:'event',name:'NightOwl',kind:'RESUB_T2',desc:'se réabonne pour le 6ème mois !',message:'Toujours là PogChamp'},
+    {type:'event',name:'NightOwl',kind:'RESUB_T2',desc:'se r\u00e9abonne pour le 6\u00e8me mois !',message:'Toujours l\u00e0 PogChamp'},
     {type:'event',name:'LegendPro',kind:'SUB_T3',desc:"s'abonne pour le 1er mois !",message:'Le meilleur stream Kappa'},
-    {type:'event',name:'OldPrime',kind:'RESUB_PRIME',desc:'se réabonne avec Prime pour le 3ème mois !'},
+    {type:'event',name:'OldPrime',kind:'RESUB_PRIME',desc:'se r\u00e9abonne avec Prime pour le 3\u00e8me mois !'},
     {type:'chat',name:'RocketRacer',text:'So close! BibleThump',badges:TB,twitchColor:'#1E90FF'},
-    {type:'event',name:'PixelPirate',kind:'FOLLOW',desc:'vient de follow la chaîne !'}
+    {type:'event',name:'PixelPirate',kind:'FOLLOW',desc:'vient de follow la cha\u00eene !'}
   ];
   seq.forEach(function(it,i){
     setTimeout(function(){
@@ -371,20 +358,20 @@ window.addEventListener('onEventReceived',function(obj){
     return;
   }
   var evName=event.name||data.displayName||data.name||'Someone';
-  if(listener==='follower-latest') enqueueEvent({type:'event',name:evName,kind:'FOLLOW',desc:'vient de follow la chaîne !'});
+  if(listener==='follower-latest') enqueueEvent({type:'event',name:evName,kind:'FOLLOW',desc:'vient de follow la cha\u00eene !'});
   if(listener==='subscriber-latest'){
     var isBulk=data.bulkGifted===true, isGifted=data.gifted===true, sender=data.sender||'', tierRaw=data.tier||data.subPlan||'', isPrime=(tierRaw==='Prime'||tierRaw==='prime'||data.prime===true), subMsg=data.message||'';
     var tierSuffix=isPrime?'_PRIME':tierRaw==='3000'?'_T3':tierRaw==='2000'?'_T2':'';
-    if(isBulk){ var qty=data.amount||1; enqueueEvent({type:'event',name:sender||evName,kind:'CGIFT',desc:'offre '+qty+' sub'+(qty>1?'s':'')+' à la communauté !'}); }
-    else if(isGifted){ var recipient=data.name||data.displayName||''; enqueueEvent({type:'event',name:sender||evName,kind:'GIFT',desc:recipient?'offre un sub gift à '+recipient+' !':'offre un sub gift !'}); }
+    if(isBulk){ var qty=data.amount||1; enqueueEvent({type:'event',name:sender||evName,kind:'CGIFT',desc:'offre '+qty+' sub'+(qty>1?'s':'')+' \u00e0 la communaut\u00e9 !'}); }
+    else if(isGifted){ var recipient=data.name||data.displayName||''; enqueueEvent({type:'event',name:sender||evName,kind:'GIFT',desc:recipient?'offre un sub gift \u00e0 '+recipient+' !':'offre un sub gift !'}); }
     else {
       var months=parseInt(data.months||data.streak||data.amount||event.amount||1,10); if(isNaN(months)||months<1) months=1;
       var isResub=months>1, kind=(isResub?'RESUB':'SUB')+tierSuffix;
-      var monthStr=isPrime ? (isResub?'se réabonne avec Prime pour le '+months+'ème mois':"s'abonne avec Prime pour le 1er mois") : (isResub?'se réabonne pour le '+months+'ème mois':"s'abonne pour le 1er mois");
+      var monthStr=isPrime ? (isResub?'se r\u00e9abonne avec Prime pour le '+months+'\u00e8me mois':"s'abonne avec Prime pour le 1er mois") : (isResub?'se r\u00e9abonne pour le '+months+'\u00e8me mois':"s'abonne pour le 1er mois");
       enqueueEvent({type:'event',name:evName,kind:kind,desc:monthStr+' !',message:subMsg});
     }
   }
-  if(listener==='cheer-latest') enqueueEvent({type:'event',name:evName,kind:'CHEER',desc:'a envoyé '+(data.amount||event.amount||'')+' bits !'});
-  if(listener==='raid-latest'){ var viewers=data.amount||data.viewers||event.amount||0; enqueueEvent({type:'event',name:evName,kind:'RAID',desc:'débarque avec '+viewers+' viewer'+(viewers>1?'s':'')+' !'}); }
+  if(listener==='cheer-latest') enqueueEvent({type:'event',name:evName,kind:'CHEER',desc:'a envoy\u00e9 '+(data.amount||event.amount||'')+' bits !'});
+  if(listener==='raid-latest'){ var viewers=data.amount||data.viewers||event.amount||0; enqueueEvent({type:'event',name:evName,kind:'RAID',desc:'d\u00e9barque avec '+viewers+' viewer'+(viewers>1?'s':'')+' !'}); }
   if(listener==='tip-latest'){ var tipAmount=data.amount||event.amount||'', currency=data.currency||event.currency||'EUR'; enqueueEvent({type:'event',name:evName,kind:'TIP',desc:'a fait un don de '+tipAmount+' '+currency+' !',message:data.message||''}); }
 });
