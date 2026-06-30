@@ -47,6 +47,8 @@ body.layout-horizontal{ overflow:visible; }
 
 /* ================================================================
    FEED — MODE HORIZONTAL
+   gap:0 + margin-right sur chaque item pour contourner
+   tout collapse de gap sur les items sans bubble
 ================================================================ */
 #feed.layout-horizontal{
   position:fixed;
@@ -59,7 +61,7 @@ body.layout-horizontal{ overflow:visible; }
   align-items:flex-end;
   flex-wrap:nowrap;
   overflow:hidden;
-  gap:10px;
+  gap:0;
   padding:12px 14px;
   box-sizing:border-box;
   transform:none;
@@ -79,7 +81,7 @@ body.layout-horizontal{ overflow:visible; }
 }
 
 /* ================================================================
-   ANIMATION SORTIE VERTICALE — monte + s'estompe progressivement
+   ANIMATION SORTIE VERTICALE
 ================================================================ */
 @keyframes fade-up-out{
   0%   { opacity:1;    transform:translateY(0);      max-height:400px; margin-bottom:0;     }
@@ -102,12 +104,12 @@ body.layout-horizontal{ overflow:visible; }
 }
 
 /* ================================================================
-   SORTIE HORIZONTALE — glisse à gauche + s'estompe
+   SORTIE HORIZONTALE
 ================================================================ */
 @keyframes fade-left-out{
-  0%   { opacity:1; transform:translateX(0);     max-width:400px; margin-right:0; }
-  60%  { opacity:0; transform:translateX(-30px); max-width:400px; margin-right:0; }
-  100% { opacity:0; transform:translateX(-50px); max-width:0;     margin-right:-10px; }
+  0%   { opacity:1; transform:translateX(0);     max-width:600px; margin-right:10px; }
+  60%  { opacity:0; transform:translateX(-30px); max-width:600px; margin-right:10px; }
+  100% { opacity:0; transform:translateX(-50px); max-width:0;     margin-right:0; }
 }
 
 #feed.layout-horizontal .item.removing{
@@ -133,6 +135,20 @@ body.layout-horizontal{ overflow:visible; }
 }
 
 /* ================================================================
+   ITEMS MODE HORIZONTAL — espacement via margin-right
+   Chaque item (chat ou event) reçoit margin-right:10px.
+   Le dernier enfant reçoit margin-right:0 via :last-child.
+================================================================ */
+#feed.layout-horizontal .item{
+  margin-right:10px;
+  margin-bottom:0;
+  flex-shrink:0;
+}
+#feed.layout-horizontal .item:last-child{
+  margin-right:0;
+}
+
+/* ================================================================
    ITEM CHAT — MODE HORIZONTAL
 ================================================================ */
 #feed.layout-horizontal .item:not(.event){
@@ -140,9 +156,7 @@ body.layout-horizontal{ overflow:visible; }
   align-items:stretch !important;
   width:auto;
   max-width:360px;
-  flex-shrink:0;
   gap:0;
-  margin:0;
   filter:drop-shadow(0 4px 14px rgba(0,0,0,.28));
   overflow:visible;
 }
@@ -184,8 +198,6 @@ body.layout-horizontal{ overflow:visible; }
 
 /* ================================================================
    ITEM EVENT — MODE HORIZONTAL
-   gap:10px du feed gère l'espace entre items.
-   margin:0 évite tout collapse ou fusion de marges.
 ================================================================ */
 #feed.layout-horizontal .item.event{
   flex-direction:row !important;
@@ -194,7 +206,6 @@ body.layout-horizontal{ overflow:visible; }
   width:auto;
   max-width:none;
   gap:0;
-  margin:0;
   filter:none;
   overflow:visible;
 }
@@ -234,6 +245,11 @@ body.layout-horizontal{ overflow:visible; }
   z-index:2;
   box-shadow:none;
   filter:none;
+}
+
+/* Event sans bubble en horizontal : topline sans margin-right négatif */
+#feed.layout-horizontal .item.event:not(:has(.bubble)) .topline{
+  margin-right:0;
 }
 
 /* ---- ITEM event (vertical) ---- */
