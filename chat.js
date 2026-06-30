@@ -30,6 +30,26 @@ function isHorizontalLayout(){
   return feed && feed.classList.contains('layout-horizontal');
 }
 
+/**
+ * Corrige la largeur du #feed en mode horizontal.
+ * Le #widget a un transform:scale() appliqué par SE pour occuper la zone configurée.
+ * Un élément position:fixed échappe à ce transform, donc il faut compenser manuellement :
+ * largeurCSS = largeurViewport / scale => correspond exactement à la zone SE.
+ */
+function fixHorizontalFeedWidth(){
+  var feed = document.getElementById('feed');
+  if (!feed || !feed.classList.contains('layout-horizontal')) return;
+  var scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scale')) || 1;
+  // 100vw en px divisé par le scale = largeur réelle en coordonnées CSS fixed
+  var vw = window.innerWidth;
+  var correctedWidth = vw / scale;
+  feed.style.width = correctedWidth + 'px';
+  // Aussi corriger la hauteur de la zone bottom
+  var vh = window.innerHeight;
+  var correctedBottom = 0; // reste à 0, mais on s'assure que le feed est en bas
+  feed.style.left = '0';
+}
+
 function applyThemeVars(){
   var w = document.getElementById('widget');
   var theme = String(fd.theme || 'monster').toLowerCase();
@@ -58,8 +78,11 @@ function applyThemeVars(){
     var layout = String(fd.chatLayout || 'vertical').toLowerCase();
     if (layout === 'horizontal') {
       feed.classList.add('layout-horizontal');
+      // Après avoir activé la classe, corriger la largeur
+      setTimeout(fixHorizontalFeedWidth, 0);
     } else {
       feed.classList.remove('layout-horizontal');
+      feed.style.width = '';
     }
   }
 }
@@ -169,7 +192,6 @@ function trimReplyText(text){
 }
 
 function extractReplyMeta(data){
-  // En mode horizontal, on désactive toujours les replies
   if (isHorizontalLayout()) return null;
   if (fd.showReplies === false) return null;
   var tags = data.tags || (data.message && data.message.tags) || null;
@@ -302,7 +324,6 @@ function addItem(opts){
   } else {
     var rawText = String((opts.data&&opts.data.text)||opts.text||'');
     var doMention = shouldHighlightMessage(rawText);
-    // En mode horizontal, les replies sont toujours désactivés
     var reply = isHorizontalLayout() ? null : (opts.reply || null);
     el=document.createElement('div');
     el.className='item'+(opts.alt?' alt':'')+(doMention?' mention':'')+(reply?' reply':'');
@@ -367,6 +388,8 @@ window.addEventListener('onWidgetLoad',function(obj){
   if(fd.testMessages) setTimeout(testSequence,300);
 });
 window.addEventListener('load',function(){ setTimeout(function(){ if(!widgetLoaded){ applyThemeVars(); testSequence(); } },500); });
+// Recalculer si la fenêtre est redimensionnée (rare mais utile en preview SE)
+window.addEventListener('resize', fixHorizontalFeedWidth);
 window.addEventListener('onEventReceived',function(obj){
   var listener=obj.detail.listener, event=(obj.detail.event)||{}, data=event.data||event;
   if(listener==='message'){
