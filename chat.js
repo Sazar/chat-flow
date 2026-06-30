@@ -42,7 +42,11 @@ function applyThemeVars(){
     monster: { nameBg:'#befe2b', nameText:'#111111', bubbleBg:'#2b2d39', bubbleBg2:'#242633', bubbleText:'#f6fbff' },
     pastel:  { nameBg:'#ffccf2', nameText:'#2b2140', bubbleBg:'#f7f0ff', bubbleBg2:'#efe7ff', bubbleText:'#3b2b58' },
     night:   { nameBg:'#8b5cf6', nameText:'#ffffff', bubbleBg:'#121827', bubbleBg2:'#0f172a', bubbleText:'#eef2ff' },
-    candy:   { nameBg:'#ff7ab6', nameText:'#ffffff', bubbleBg:'#1f2937', bubbleBg2:'#111827', bubbleText:'#f9fafb' }
+    candy:   { nameBg:'#ff7ab6', nameText:'#ffffff', bubbleBg:'#1f2937', bubbleBg2:'#111827', bubbleText:'#f9fafb' },
+    sunset:  { nameBg:'#ff8a5b', nameText:'#2a1208', bubbleBg:'#4a2230', bubbleBg2:'#371824', bubbleText:'#fff1ea' },
+    forest:  { nameBg:'#8fd694', nameText:'#102313', bubbleBg:'#1f3a2e', bubbleBg2:'#162a22', bubbleText:'#edf8f0' },
+    ocean:   { nameBg:'#5ed3f3', nameText:'#062531', bubbleBg:'#12354a', bubbleBg2:'#0d2838', bubbleText:'#eafaff' },
+    lava:    { nameBg:'#ff6b35', nameText:'#2b0f08', bubbleBg:'#3a1b16', bubbleBg2:'#2a120f', bubbleText:'#fff0eb' }
   };
   var t = themes[theme] || themes.monster;
   var useCustom = !!fd.useNameBarColor;
@@ -58,7 +62,7 @@ function applyThemeVars(){
   w.style.setProperty('--name-text', useCustom && fd.nameText ? fd.nameText : t.nameText);
   root.style.setProperty('--bubble-bg',   t.bubbleBg);
   root.style.setProperty('--bubble-bg-2', t.bubbleBg2);
-  root.style.setProperty('--bubble-text', t.bubbleText);
+  root.style.setProperty('--bubble-text', fd.bubbleTextColor || t.bubbleText);
 
   var feed = document.getElementById('feed');
   if (feed) {
@@ -299,7 +303,6 @@ function removeOldestIfNeeded(feed){
     var old = feed.firstElementChild;
     if(!old) break;
     old.classList.add('removing');
-    /* Syncé avec l'animation fade-up-out : 1s */
     setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 1050);
     break;
   }

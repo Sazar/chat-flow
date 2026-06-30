@@ -16,7 +16,11 @@
       "monster": "Monster",
       "pastel": "Pastel",
       "night": "Night",
-      "candy": "Candy"
+      "candy": "Candy",
+      "sunset": "Sunset",
+      "forest": "Forest",
+      "ocean": "Ocean",
+      "lava": "Lava"
     }
   },
   "eventAnim": {
@@ -92,6 +96,11 @@
     "type": "colorpicker",
     "label": "Name text color",
     "value": "#111111"
+  },
+  "bubbleTextColor": {
+    "type": "colorpicker",
+    "label": "Message text color",
+    "value": "#f6fbff"
   },
   "fontFamily": {
     "type": "googleFont",
