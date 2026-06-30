@@ -5,6 +5,9 @@ let widgetLoaded = false;
 let eventQueue = [];
 let eventQueueBusy = false;
 
+// Largeur de base du #widget en CSS (taille interne fixe)
+var WIDGET_BASE_WIDTH = 600;
+
 function esc(s){
   return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
@@ -31,23 +34,47 @@ function isHorizontalLayout(){
 }
 
 /**
- * Corrige la largeur du #feed en mode horizontal.
- * Le #widget a un transform:scale() appliqué par SE pour occuper la zone configurée.
- * Un élément position:fixed échappe à ce transform, donc il faut compenser manuellement :
- * largeurCSS = largeurViewport / scale => correspond exactement à la zone SE.
+ * Calcule la largeur correcte du feed horizontal.
+ *
+ * StreamElements charge le widget dans une iframe de 600px (WIDGET_BASE_WIDTH).
+ * La zone configurée dans SE (ex: 1920px) est rendue via transform:scale sur
+ * le conteneur SE — mais l'iframe elle-même reste à 600px CSS.
+ * Un élément position:fixed vit dans ce viewport de 600px.
+ *
+ * Pour couvrir toute la zone SE, on utilise le champ widgetWidth (largeur
+ * réelle configurée dans SE) et on le convertit en px CSS fixed :
+ *   widthCSS = widgetWidth * (600 / widgetWidth) = 600... non.
+ *
+ * La vraie formule : le scale SE = widgetWidth / WIDGET_BASE_WIDTH.
+ * Un élément fixed de X px CSS sera affiché à X * scale px à l'écran.
+ * Pour qu'il fasse widgetWidth px à l'écran : X = widgetWidth / scale = WIDGET_BASE_WIDTH.
+ * Mais l'iframe viewort fait 600px, donc width:100% ou 600px suffit... sauf
+ * que SE clip l'iframe. La solution : width = widgetWidth / scale en px fixed,
+ * où scale = widgetWidth / WIDGET_BASE_WIDTH.
+ * => width = widgetWidth / (widgetWidth / 600) = 600px — toujours 600px CSS.
+ *
+ * CONCLUSION : en mode SE, le feed fixed doit faire exactement WIDGET_BASE_WIDTH px
+ * pour couvrir toute la zone. On force donc 100vw qui = 600px dans l'iframe SE.
+ * Pour la preview locale (sans scale SE), widgetWidth permet d'élargir via
+ * un fallback sur window.innerWidth.
  */
 function fixHorizontalFeedWidth(){
   var feed = document.getElementById('feed');
   if (!feed || !feed.classList.contains('layout-horizontal')) return;
-  var scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scale')) || 1;
-  // 100vw en px divisé par le scale = largeur réelle en coordonnées CSS fixed
-  var vw = window.innerWidth;
-  var correctedWidth = vw / scale;
-  feed.style.width = correctedWidth + 'px';
-  // Aussi corriger la hauteur de la zone bottom
-  var vh = window.innerHeight;
-  var correctedBottom = 0; // reste à 0, mais on s'assure que le feed est en bas
-  feed.style.left = '0';
+
+  // Dans l'iframe SE, window.innerWidth = WIDGET_BASE_WIDTH (600px)
+  // Le scale SE s'applique en dehors de l'iframe — on ne peut pas le lire depuis JS
+  // La seule valeur correcte est 100% du viewport de l'iframe = 100vw
+  // On retire tout style.width inline pour laisser le CSS width:100vw faire son travail
+  feed.style.width = '';
+
+  // Pour la preview hors SE (test local) où window.innerWidth peut être plus grand,
+  // on utilise widgetWidth si fourni pour forcer la largeur attendue
+  var targetWidth = parseInt(fd.widgetWidth, 10);
+  if (!isNaN(targetWidth) && targetWidth > 0 && window.innerWidth > WIDGET_BASE_WIDTH) {
+    // On est hors iframe SE (preview locale) : appliquer la largeur cible directement
+    feed.style.width = targetWidth + 'px';
+  }
 }
 
 function applyThemeVars(){
@@ -72,13 +99,11 @@ function applyThemeVars(){
   root.style.setProperty('--bubble-bg-2', t.bubbleBg2);
   root.style.setProperty('--bubble-text', t.bubbleText);
 
-  // Disposition horizontale ou verticale
   var feed = document.getElementById('feed');
   if (feed) {
     var layout = String(fd.chatLayout || 'vertical').toLowerCase();
     if (layout === 'horizontal') {
       feed.classList.add('layout-horizontal');
-      // Après avoir activé la classe, corriger la largeur
       setTimeout(fixHorizontalFeedWidth, 0);
     } else {
       feed.classList.remove('layout-horizontal');
@@ -388,7 +413,6 @@ window.addEventListener('onWidgetLoad',function(obj){
   if(fd.testMessages) setTimeout(testSequence,300);
 });
 window.addEventListener('load',function(){ setTimeout(function(){ if(!widgetLoaded){ applyThemeVars(); testSequence(); } },500); });
-// Recalculer si la fenêtre est redimensionnée (rare mais utile en preview SE)
 window.addEventListener('resize', fixHorizontalFeedWidth);
 window.addEventListener('onEventReceived',function(obj){
   var listener=obj.detail.listener, event=(obj.detail.event)||{}, data=event.data||event;

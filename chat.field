@@ -8,6 +8,14 @@
       "horizontal": "Horizontal — messages côte à côte"
     }
   },
+  "widgetWidth": {
+    "type": "slider",
+    "label": "Largeur de la zone widget SE (px) — mode horizontal uniquement",
+    "value": 1920,
+    "min": 400,
+    "max": 3840,
+    "step": 10
+  },
   "theme": {
     "type": "dropdown",
     "label": "Theme",
