@@ -2,7 +2,7 @@
 
 :root{
   --font:"Inter",sans-serif;
-  --shadow:0 8px 18px rgba(0,0,0,.12);
+  --shadow:0 6px 16px rgba(0,0,0,.18);
   --scale:1;
   --name-bg:#befe2b;
   --name-text:#111111;
@@ -47,7 +47,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    FEED — MODE HORIZONTAL
-   Messages côte à côte en bas, défilent de droite à gauche.
 ================================================================ */
 #feed.layout-horizontal{
   flex-direction:row;
@@ -60,65 +59,17 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   padding:12px 18px;
 }
 
-/* ----------------------------------------------------------------
-   ITEM chat en mode horizontal
-   → flex-row : [topline pseudo | bubble texte] sur une seule ligne
----------------------------------------------------------------- */
-#feed.layout-horizontal .item:not(.event){
-  flex-direction:row !important;
-  align-items:center !important;
-  width:auto;
-  max-width:320px;
-  gap:0;
-  filter:drop-shadow(var(--shadow));
-}
-
-/* Topline pseudo : petit pill à gauche */
-#feed.layout-horizontal .item:not(.event) .topline{
-  flex-shrink:0;
-  border-radius:8px 0 0 8px;
-  font-size:12px;
-  padding:6px 10px;
-  white-space:nowrap;
-  z-index:2;
-  /* override du margin-bottom vertical */
-  margin:0;
-}
-
-/* Bubble texte : collée à droite du pseudo */
-#feed.layout-horizontal .item:not(.event) .bubble{
-  flex:1 1 auto;
-  margin:0 !important;      /* annule margin-top:-8px et margin-left:10px */
-  border-radius:0 8px 8px 0;
-  padding:6px 10px;
-  font-size:13px;
-  line-height:1.25;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:220px;
-}
-
-/* Events horizontaux : garde le style vertical mais un peu plus compact */
-#feed.layout-horizontal .item.event{
-  flex-shrink:0;
-  width:auto;
-  max-width:260px;
-}
-#feed.layout-horizontal .item.event .topline{
-  font-size:13px;
-  padding:12px 10px;
-  gap:6px;
-  border-radius:14px;
-}
-
-/* ---- ITEM chat (vertical, défaut) ---- */
+/* ================================================================
+   ITEM — BASE (vertical)
+   IMPORTANT : plus de filter:drop-shadow sur .item — c’est lui qui
+   créait les coins pointus en suivant chaque enfant séparément.
+   Les ombres sont portées directement par .topline et .bubble.
+================================================================ */
 .item{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
-  filter:drop-shadow(var(--shadow));
+  /* PAS de filter ici */
   flex-shrink:0;
-  /* transition pour la sortie aspirée vers le haut */
   transition:
     opacity .30s ease,
     transform .30s ease,
@@ -131,8 +82,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    SORTIE VERTICALE — aspiré vers le haut
-   clip-path réduit de bas en haut, translateY tire vers le haut.
-   margin-bottom s'écrase pour que les voisins remontent proprement.
 ================================================================ */
 .item.removing{
   opacity:0;
@@ -145,12 +94,10 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    SORTIE HORIZONTALE — disparaît vers la gauche
-   width → 0 + translateX.
 ================================================================ */
 #feed.layout-horizontal .item.removing{
-  /* reset vertical */
-  clip-path: none !important;
-  transform: translateX(-20px) scale(.95) !important;
+  clip-path:none !important;
+  transform:translateX(-20px) scale(.95) !important;
   opacity:0;
   max-width:0 !important;
   width:0 !important;
@@ -167,36 +114,128 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 }
 
 /* ---- Entrée verticale depuis le bas ---- */
-.item:not(.event){ animation: in-chat .3s cubic-bezier(.2,.9,.2,1) both; }
+.item:not(.event){ animation:in-chat .3s cubic-bezier(.2,.9,.2,1) both; }
 @keyframes in-chat{
   from{ opacity:0; transform:translateY(10px) scale(.98); }
-  to{   opacity:1; transform:translateY(0)    scale(1);   }
+  to{   opacity:1; transform:translateY(0) scale(1); }
 }
 /* ---- Entrée horizontale depuis la droite ---- */
 #feed.layout-horizontal .item:not(.event){
-  animation: in-chat-h .3s cubic-bezier(.2,.9,.2,1) both;
+  animation:in-chat-h .3s cubic-bezier(.2,.9,.2,1) both;
 }
 @keyframes in-chat-h{
   from{ opacity:0; transform:translateX(18px) scale(.98); }
-  to{   opacity:1; transform:translateX(0)    scale(1);   }
+  to{   opacity:1; transform:translateX(0) scale(1); }
 }
 
-/* ---- ITEM event ---- */
+/* ================================================================
+   ITEM CHAT — MODE HORIZONTAL
+   [topline pseudo │ bubble texte] sur une seule ligne
+================================================================ */
+#feed.layout-horizontal .item:not(.event){
+  flex-direction:row !important;
+  align-items:stretch !important;
+  width:auto;
+  max-width:340px;
+  gap:0;
+}
+
+/* Pseudo : pill gauche, coins gauche arrondis uniquement */
+#feed.layout-horizontal .item:not(.event) .topline{
+  flex-shrink:0;
+  border-radius:8px 0 0 8px;
+  font-size:12px;
+  padding:6px 10px;
+  white-space:nowrap;
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  margin:0;
+  box-shadow:none;   /* ombre sur l’ensemble du item, pas sur chaque morceau */
+}
+
+/* Bubble texte : collée à droite, coins droits arrondis */
+#feed.layout-horizontal .item:not(.event) .bubble{
+  flex:1 1 auto;
+  margin:0 !important;
+  border-radius:0 8px 8px 0;
+  padding:6px 10px;
+  font-size:13px;
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:220px;
+  box-shadow:none;
+}
+/* Ombre globale sur le conteneur en horizontal (un seul box-shadow propre) */
+#feed.layout-horizontal .item:not(.event){
+  box-shadow:var(--shadow);
+  border-radius:8px;
+}
+
+/* ================================================================
+   ITEM EVENT — MODE HORIZONTAL
+   [topline icon+nom+desc │ (optionnel: bubble message)] en ligne
+================================================================ */
+#feed.layout-horizontal .item.event{
+  flex-direction:row !important;
+  align-items:stretch !important;
+  flex-shrink:0;
+  width:auto;
+  max-width:360px;
+  gap:0;
+  filter:none;
+  box-shadow:var(--shadow);
+  border-radius:14px;
+}
+
+/* Topline event horizontal : pill gauche arrondie */
+#feed.layout-horizontal .item.event .topline{
+  flex-shrink:0;
+  border-radius:14px 0 0 14px;
+  font-size:13px;
+  padding:10px 12px;
+  gap:6px;
+  flex-wrap:nowrap;
+  box-shadow:none;
+  align-items:center;
+}
+
+/* Bulle message event en horizontal : pill droite arrondie */
+#feed.layout-horizontal .item.event .bubble{
+  flex:1 1 auto;
+  margin:0 !important;
+  border-radius:0 14px 14px 0;
+  padding:8px 12px;
+  font-size:13px;
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:180px;
+  box-shadow:none;
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+}
+
+/* ---- ITEM event (vertical) ---- */
 .item.event{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
   filter:none; flex-shrink:0;
 }
 
-.item.event.anim-slide    { animation: ev-slide .45s cubic-bezier(.2,.9,.2,1) both; }
-.item.event.anim-pop      { animation: ev-pop .4s cubic-bezier(.34,1.56,.64,1) both; }
-.item.event.anim-bounce   { animation: ev-bounce .6s cubic-bezier(.36,.07,.19,.97) both; }
-.item.event.anim-flip     { animation: ev-flip .5s ease both; }
-.item.event.anim-glow     { animation: ev-glow .5s ease both; }
-.item.event.anim-zoomleft { animation: ev-zoomleft .45s cubic-bezier(.2,.9,.2,1) both; }
-.item.event.anim-swing    { animation: ev-swing .65s ease both; }
-.item.event.anim-stamp    { animation: ev-stamp .28s cubic-bezier(.2,.9,.2,1) both; }
-.item.event.anim-wave     { animation: ev-wave .55s ease both; }
+.item.event.anim-slide    { animation:ev-slide .45s cubic-bezier(.2,.9,.2,1) both; }
+.item.event.anim-pop      { animation:ev-pop .4s cubic-bezier(.34,1.56,.64,1) both; }
+.item.event.anim-bounce   { animation:ev-bounce .6s cubic-bezier(.36,.07,.19,.97) both; }
+.item.event.anim-flip     { animation:ev-flip .5s ease both; }
+.item.event.anim-glow     { animation:ev-glow .5s ease both; }
+.item.event.anim-zoomleft { animation:ev-zoomleft .45s cubic-bezier(.2,.9,.2,1) both; }
+.item.event.anim-swing    { animation:ev-swing .65s ease both; }
+.item.event.anim-stamp    { animation:ev-stamp .28s cubic-bezier(.2,.9,.2,1) both; }
+.item.event.anim-wave     { animation:ev-wave .55s ease both; }
 
 @keyframes ev-slide    { from{ opacity:0; transform:translateY(28px);} to{ opacity:1; transform:translateY(0);} }
 @keyframes ev-pop      { from{ opacity:0; transform:scale(.5);} to{ opacity:1; transform:scale(1);} }
@@ -208,7 +247,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 @keyframes ev-stamp    { 0%{opacity:0;transform:scale(1.18);} 70%{opacity:1;transform:scale(.94);} 100%{opacity:1;transform:scale(1);} }
 @keyframes ev-wave     { 0%{opacity:0;transform:translateY(14px) skewY(5deg);} 55%{opacity:1;transform:translateY(-4px) skewY(-3deg);} 100%{opacity:1;transform:translateY(0) skewY(0);} }
 
-/* ---- TOPLINE chat ---- */
+/* ---- TOPLINE chat (vertical) ---- */
 .item .topline{
   display:inline-flex; align-items:center; gap:6px;
   background:var(--name-bg); color:var(--name-text);
@@ -219,7 +258,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 .item .badges{ display:inline-flex; align-items:center; gap:3px; }
 .item .badge{ width:14px; height:14px; display:inline-block; flex:0 0 auto; }
 
-/* ---- BULLE chat ---- */
+/* ---- BULLE chat (vertical) ---- */
 .item .bubble{
   margin-top:-8px; margin-left:10px;
   background:var(--bubble-bg); color:var(--bubble-text);
@@ -263,7 +302,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 }
 .mention-tag{ color:var(--highlight-color); font-weight:700; }
 
-/* ---- TOPLINE event ---- */
+/* ---- TOPLINE event (vertical) ---- */
 .item.event .topline{
   display:inline-flex; align-items:center; flex-wrap:wrap; gap:9px;
   background:var(--name-bg); color:var(--name-text);
@@ -286,7 +325,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   border-radius:999px;
 }
 
-/* Base pilule */
 .item.event .ev-kind{
   display:inline-block;
   font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
@@ -299,7 +337,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 /* ---- T2 — pulse violet ---- */
 .item.event .ev-kind.tier2{
   background:#7c3aed; color:#ffffff;
-  animation: pulse-t2 2.2s ease-in-out infinite;
+  animation:pulse-t2 2.2s ease-in-out infinite;
 }
 @keyframes pulse-t2{
   0%,100%{ box-shadow:0 0 6px 1px rgba(124,58,237,.5), 0 0 14px 3px rgba(124,58,237,.25); }
@@ -307,12 +345,12 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 }
 
 /* ================================================================
-   T3 — OR VRAI FLASHY, TEXTE NET
+   T3 — OR FLASHY, TEXTE NET
 ================================================================ */
 .item.event .ev-kind-wrap.t3-wrap{
   position:relative;
   border-radius:999px;
-  animation: t3-wrap-halo 1.8s ease-in-out infinite;
+  animation:t3-wrap-halo 1.8s ease-in-out infinite;
 }
 @keyframes t3-wrap-halo{
   0%,100%{
@@ -331,8 +369,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 .item.event .ev-kind-wrap.t3-wrap::before{
   content:'';
-  position:absolute;
-  inset:0;
+  position:absolute; inset:0;
   border-radius:999px;
   background:linear-gradient(90deg,
     transparent 0%,
@@ -341,9 +378,9 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
     rgba(255,255,180,.0) 85%,
     transparent 100%
   );
-  animation: t3-flash 2.4s ease-in-out infinite;
+  animation:t3-flash 2.4s ease-in-out infinite;
   pointer-events:none;
-  will-change:opacity, transform;
+  will-change:opacity,transform;
 }
 @keyframes t3-flash{
   0%,20%  { opacity:0; transform:scaleX(.1) translateX(-120%); }
@@ -352,24 +389,16 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   100%    { opacity:0; transform:scaleX(.1) translateX(120%); }
 }
 
-/* Pilule T3 statique — jaune-or éclatant */
 .item.event .ev-kind.tier3{
-  background: linear-gradient(135deg,
-    #ca8a04 0%,
-    #eab308 30%,
-    #fde047 60%,
-    #fef08a 85%,
-    #fde047 100%
-  );
+  background:linear-gradient(135deg,#ca8a04 0%,#eab308 30%,#fde047 60%,#fef08a 85%,#fde047 100%);
   color:#1a0800;
   box-shadow:
     0 0 0 1.5px rgba(254,240,138,.95),
     0 0 0 3px   rgba(234,179,8,.5),
     0 2px 6px   rgba(0,0,0,.4);
-  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+  text-shadow:0 1px 0 rgba(255,255,255,.5);
 }
 
-/* ---- Prime — bleu fixe ---- */
 .item.event .ev-kind.prime{
   background:linear-gradient(135deg,#0070e0,#00b4ff);
   color:#ffffff;
