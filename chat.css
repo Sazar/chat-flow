@@ -14,8 +14,6 @@
 
 html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transparent; font-family:var(--font); }
 
-/* En mode horizontal on a besoin que body soit position:relative
-   et que le feed puisse sortir des limites du #widget */
 body.layout-horizontal{ overflow:visible; }
 
 #widget{
@@ -25,7 +23,6 @@ body.layout-horizontal{ overflow:visible; }
   transform:scale(var(--scale)); transform-origin:top left;
 }
 
-/* Quand horizontal : on laisse le feed déborder */
 #widget.layout-horizontal{ overflow:visible; }
 
 #widget.theme-monster{ --name-bg:#befe2b; --name-text:#111111; --bubble-bg:#2b2d39; --bubble-bg-2:#242633; --bubble-text:#f6fbff; }
@@ -50,9 +47,6 @@ body.layout-horizontal{ overflow:visible; }
 
 /* ================================================================
    FEED — MODE HORIZONTAL
-   position:fixed sur le body pour échapper au clip du #widget.
-   Le #widget a overflow:visible quand layout-horizontal.
-   width:100vw = toute la largeur de l'iframe SE.
 ================================================================ */
 #feed.layout-horizontal{
   position:fixed;
@@ -65,10 +59,9 @@ body.layout-horizontal{ overflow:visible; }
   align-items:flex-end;
   flex-wrap:nowrap;
   overflow:hidden;
-  gap:8px;
+  gap:10px;
   padding:12px 14px;
   box-sizing:border-box;
-  /* Annule le transform hérité du #widget scale */
   transform:none;
   zoom:1;
 }
@@ -87,7 +80,6 @@ body.layout-horizontal{ overflow:visible; }
 
 /* ================================================================
    ANIMATION SORTIE VERTICALE — monte + s'estompe progressivement
-   Durée : 0.8s. L'opacité s'étire jusqu'à 80% pour un fondu doux.
 ================================================================ */
 @keyframes fade-up-out{
   0%   { opacity:1;    transform:translateY(0);      max-height:400px; margin-bottom:0;     }
@@ -101,10 +93,8 @@ body.layout-horizontal{ overflow:visible; }
   animation: fade-up-out 0.8s cubic-bezier(.25,.1,.25,1) forwards;
   pointer-events:none;
   overflow:hidden !important;
-  /* Efface toutes les ombres (filter drop-shadow) pendant la sortie */
   filter:none !important;
 }
-/* Les enfants de l'item en cours de suppression ne doivent plus avoir d'ombres */
 .item.removing .topline,
 .item.removing .bubble{
   box-shadow:none !important;
@@ -117,7 +107,7 @@ body.layout-horizontal{ overflow:visible; }
 @keyframes fade-left-out{
   0%   { opacity:1; transform:translateX(0);     max-width:400px; margin-right:0; }
   60%  { opacity:0; transform:translateX(-30px); max-width:400px; margin-right:0; }
-  100% { opacity:0; transform:translateX(-50px); max-width:0;     margin-right:-8px; }
+  100% { opacity:0; transform:translateX(-50px); max-width:0;     margin-right:-10px; }
 }
 
 #feed.layout-horizontal .item.removing{
@@ -152,6 +142,7 @@ body.layout-horizontal{ overflow:visible; }
   max-width:360px;
   flex-shrink:0;
   gap:0;
+  margin:0;
   filter:drop-shadow(0 4px 14px rgba(0,0,0,.28));
   overflow:visible;
 }
@@ -193,6 +184,8 @@ body.layout-horizontal{ overflow:visible; }
 
 /* ================================================================
    ITEM EVENT — MODE HORIZONTAL
+   gap:10px du feed gère l'espace entre items.
+   margin:0 évite tout collapse ou fusion de marges.
 ================================================================ */
 #feed.layout-horizontal .item.event{
   flex-direction:row !important;
@@ -201,6 +194,7 @@ body.layout-horizontal{ overflow:visible; }
   width:auto;
   max-width:none;
   gap:0;
+  margin:0;
   filter:none;
   overflow:visible;
 }
