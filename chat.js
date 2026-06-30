@@ -25,7 +25,6 @@ function applyThemeVars(){
   var root = document.documentElement;
   root.style.setProperty('--scale', fd.scale || 1);
   if (fd.fontFamily) root.style.setProperty('--font', fd.fontFamily);
-  /* Couleur highlight mention */
   root.style.setProperty('--highlight-color', fd.highlightColor || '#f59e0b');
   var themes = {
     monster: { nameBg:'#befe2b', nameText:'#111111', bubbleBg:'#2b2d39', bubbleBg2:'#242633', bubbleText:'#f6fbff' },
@@ -142,6 +141,20 @@ function highlightMentionText(html){
   var re = new RegExp('(^|[^\\w])@(' + target.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')(?=$|[^\\w])','ig');
   return html.replace(re,'$1<span class="mention-tag">@$2</span>');
 }
+function trimReplyText(text){
+  return String(text || '').replace(/\s+/g,' ').trim().slice(0, 110);
+}
+function extractReplyMeta(data){
+  if (fd.showReplies === false) return null;
+  var parentUser = data.replyParentDisplayName || data.replyParentUserDisplayName || data.replyParentUserLogin || data.replyParentUserName || data.replyParentName || '';
+  var parentText = data.replyParentMessageBody || data.replyParentMsgBody || data.replyParentMessage || data.replyParentText || '';
+  if (!parentUser && !parentText) return null;
+  return { user: parentUser || 'message', text: trimReplyText(parentText) };
+}
+function buildReplyHtml(reply){
+  if (!reply) return '';
+  return '<div class="reply-ref"><div class="reply-ref-body"><div class="reply-ref-top">↩ En réponse à <span class="reply-ref-user">'+esc(reply.user)+'</span></div><div class="reply-ref-text">'+esc(reply.text || '')+'</div></div></div>';
+}
 
 function renderText(data, isTest, applyMentionHighlight){
   var rawText=String(data.text||data.messageRaw||(data.message&&data.message.text)||'');
@@ -235,10 +248,11 @@ function addItem(opts){
   } else {
     var rawText = String((opts.data&&opts.data.text)||opts.text||'');
     var doMention = shouldHighlightMessage(rawText);
+    var reply = opts.reply || null;
     el=document.createElement('div');
-    el.className='item'+(opts.alt?' alt':'')+(doMention?' mention':'');
+    el.className='item'+(opts.alt?' alt':'')+(doMention?' mention':'')+(reply?' reply':'');
     var body=renderText(opts.data||{text:opts.text||''},opts.isTest||false,doMention);
-    el.innerHTML='<div class="topline"><span class="name" style="color:'+esc(opts.color||'inherit')+'">'+esc(opts.name||'viewer')+'</span><span class="badges">'+badgeIcons(opts.badges||[])+'</span></div><div class="bubble">'+body+'</div>';
+    el.innerHTML='<div class="topline"><span class="name" style="color:'+esc(opts.color||'inherit')+'">'+esc(opts.name||'viewer')+'</span><span class="badges">'+badgeIcons(opts.badges||[])+'</span></div><div class="bubble">'+buildReplyHtml(reply)+body+'</div>';
   }
   feed.appendChild(el);
   removeOldestIfNeeded(feed);
@@ -251,6 +265,7 @@ function testSequence(){
     {type:'chat',name:'HS_Hero',text:"I'm dying Kappa LUL",badges:TB,twitchColor:'#FF4500'},
     {type:'event',name:'ApexAce',kind:'SUB',desc:"s'abonne pour le 1er mois !"},
     {type:'chat',name:'Viewer42',text:'@streamer trop fort !',badges:[],twitchColor:'#9147ff'},
+    {type:'chat',name:'NightOwl',text:'C\'est tellement vrai lol',reply:{user:'HS_Hero',text:"I'm dying Kappa LUL"},badges:TB,twitchColor:'#a855f7'},
     {type:'event',name:'PrimeGuy',kind:'SUB_PRIME',desc:"s'abonne avec Prime pour le 1er mois !"},
     {type:'event',name:'NightOwl',kind:'RESUB_T2',desc:'se réabonne pour le 6ème mois !',message:'Toujours là PogChamp'},
     {type:'event',name:'LegendPro',kind:'SUB_T3',desc:"s'abonne pour le 1er mois !",message:'Le meilleur stream Kappa'},
@@ -258,7 +273,7 @@ function testSequence(){
     {type:'chat',name:'RocketRacer',text:'So close! BibleThump',badges:TB,twitchColor:'#1E90FF'},
     {type:'event',name:'PixelPirate',kind:'FOLLOW',desc:'vient de follow la chaîne !'}
   ];
-  seq.forEach(function(it,i){ setTimeout(function(){ addItem({type:it.type,name:it.name,kind:it.kind||'',desc:it.desc||'',message:it.message||'',color:resolveNameColor(it.twitchColor||''),alt:i%2===1,data:{text:it.text||''},badges:it.badges||[],isTest:true}); },i*900); });
+  seq.forEach(function(it,i){ setTimeout(function(){ addItem({type:it.type,name:it.name,kind:it.kind||'',desc:it.desc||'',message:it.message||'',reply:it.reply||null,color:resolveNameColor(it.twitchColor||''),alt:i%2===1,data:{text:it.text||''},badges:it.badges||[],isTest:true}); },i*900); });
 }
 
 window.addEventListener('onWidgetLoad',function(obj){
@@ -276,7 +291,7 @@ window.addEventListener('onEventReceived',function(obj){
   if(listener==='message'){
     if(fd.hideCommands&&String(data.text||'').startsWith('!')) return;
     var tc=(fd.useTwitchColor===true)?(data.displayColor||data.color||''):'';
-    addItem({type:'chat',name:data.displayName||data.nick||data.name||'viewer',badges:data.badges||[],color:resolveNameColor(tc),data:data,isTest:false});
+    addItem({type:'chat',name:data.displayName||data.nick||data.name||'viewer',badges:data.badges||[],color:resolveNameColor(tc),data:data,reply:extractReplyMeta(data),isTest:false});
     return;
   }
   var evName=event.name||data.displayName||data.name||'Someone';

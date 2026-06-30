@@ -41,6 +41,11 @@
     "label": "Afficher les pilules (SUB, FOLLOW...)",
     "value": true
   },
+  "showReplies": {
+    "type": "checkbox",
+    "label": "Afficher les réponses Twitch (reply)",
+    "value": true
+  },
   "highlightMentions": {
     "type": "checkbox",
     "label": "Highlight @mentions (contour coloré)",
