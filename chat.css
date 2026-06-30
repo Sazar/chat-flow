@@ -44,13 +44,18 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    FEED — MODE HORIZONTAL
+   position:fixed sort du clip du #widget (600px).
+   justify-content:flex-start → items démarrent à gauche
+   et remplissent naturellement toute la zone configurée dans SE.
 ================================================================ */
 #feed.layout-horizontal{
   position:fixed;
   bottom:0; left:0; right:0; top:auto;
-  height:auto; width:100%;
+  height:auto;
+  width:100%;
   flex-direction:row;
-  justify-content:flex-end; align-items:flex-end;
+  justify-content:flex-start;
+  align-items:flex-end;
   flex-wrap:nowrap;
   overflow-x:auto; overflow-y:visible;
   gap:8px; padding:12px 18px;
@@ -59,8 +64,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    ITEM — BASE (vertical)
-   Ombre portée par filter:drop-shadow sur .item,
-   suit les border-radius des enfants sans artefact anguleux.
 ================================================================ */
 .item{
   width:fit-content; max-width:100%;
@@ -77,7 +80,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 }
 
 /* ================================================================
-   SORTIE VERTICALE — texte glisse vers le haut + fade
+   SORTIE VERTICALE
 ================================================================ */
 .item.removing{
   opacity:0;
@@ -94,7 +97,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 }
 
 /* ================================================================
-   SORTIE HORIZONTALE — disparaît vers la gauche
+   SORTIE HORIZONTALE
 ================================================================ */
 #feed.layout-horizontal .item.removing{
   transform:translateX(-24px) !important;
@@ -130,49 +133,49 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    ITEM CHAT — MODE HORIZONTAL
-   Pilule pseudo superposée sur la bulle texte.
-   La bulle garde la même forme qu'en vertical (légèrement arrondie).
+   align-items:stretch : topline et bubble s'étirent à la même hauteur.
+   Même padding vertical (8px) sur topline et bubble = hauteur identique.
 ================================================================ */
 #feed.layout-horizontal .item:not(.event){
   flex-direction:row !important;
-  align-items:center !important;
+  align-items:stretch !important;
   width:auto;
-  max-width:420px;
+  max-width:none;
   gap:0;
   filter:drop-shadow(0 4px 14px rgba(0,0,0,.28));
   overflow:visible;
 }
 
-/* Pseudo : pilule totalement arrondie, z-index élevé, se superpose sur la bubble */
+/* Pseudo */
 #feed.layout-horizontal .item:not(.event) .topline{
   flex-shrink:0;
   border-radius:999px;
-  font-size:12px;
-  padding:7px 13px;
+  font-size:13px;
+  padding:8px 13px;       /* même padding vertical que la bubble */
   white-space:nowrap;
   display:flex;
   align-items:center;
   margin:0;
-  margin-right:-14px;   /* superposition sur la bubble */
+  margin-right:-14px;
   z-index:3;
   position:relative;
-  align-self:center;
   box-shadow:none;
 }
 
-/* Bubble texte : même forme qu'en vertical, légèrement arrondie */
+/* Bubble texte */
 #feed.layout-horizontal .item:not(.event) .bubble{
   flex:1 1 auto;
   margin:0 !important;
-  border-radius:9px;             /* identique au mode vertical */
-  padding:8px 14px 8px 22px;    /* padding-left large pour laisser place au pseudo */
+  border-radius:9px;
+  padding:8px 14px 8px 22px;
   font-size:13px;
   line-height:1.25;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:260px;
-  align-self:center;
+  max-width:280px;
+  display:flex;
+  align-items:center;
   position:relative;
   z-index:2;
   box-shadow:none;
@@ -180,36 +183,36 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    ITEM EVENT — MODE HORIZONTAL
-   Topline collée à la bubble, sans ombre sur les pilules.
+   align-items:stretch : même hauteur topline + bubble.
 ================================================================ */
 #feed.layout-horizontal .item.event{
   flex-direction:row !important;
-  align-items:center !important;
+  align-items:stretch !important;
   flex-shrink:0;
   width:auto;
   max-width:none;
   gap:0;
-  filter:none;       /* pas d'ombre globale sur l'event horizontal */
+  filter:none;
   overflow:visible;
 }
 
-/* Topline event : légèrement arrondie comme en vertical, collée à la bubble, sans ombre */
 #feed.layout-horizontal .item.event .topline{
   flex-shrink:0;
   border-radius:14px;
   font-size:13px;
-  padding:10px 14px;
+  padding:8px 14px;
   gap:7px;
   flex-wrap:nowrap;
   white-space:nowrap;
   position:relative;
   z-index:3;
-  margin-right:-14px;   /* superposition sur la bubble */
+  margin-right:-14px;
   box-shadow:none;
   filter:none;
+  display:flex;
+  align-items:center;
 }
 
-/* Bubble message event horizontal : sans ombre, collée à la topline */
 #feed.layout-horizontal .item.event .bubble{
   flex:0 1 auto;
   margin:0 !important;
@@ -220,8 +223,9 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:200px;
-  align-self:center;
+  max-width:220px;
+  display:flex;
+  align-items:center;
   position:relative;
   z-index:2;
   box-shadow:none;
@@ -257,7 +261,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    TOPLINE chat (vertical)
-   PAS de box-shadow — ombre via filter:drop-shadow du .item
 ================================================================ */
 .item .topline{
   display:inline-flex; align-items:center; gap:6px;
@@ -276,7 +279,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   background:var(--bubble-bg); color:var(--bubble-text);
   padding:16px 13px 10px; border-radius:9px;
   font-size:16px; line-height:1.3; font-weight:500;
-  box-shadow:none;   /* ombre via filter:drop-shadow du .item */
+  box-shadow:none;
   max-width:100%;
   word-break:break-word; white-space:pre-wrap;
 }
