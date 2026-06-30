@@ -2,7 +2,7 @@
 
 :root{
   --font:"Inter",sans-serif;
-  --shadow:0 6px 16px rgba(0,0,0,.18);
+  --shadow:0 4px 12px rgba(0,0,0,.22);
   --scale:1;
   --name-bg:#befe2b;
   --name-text:#111111;
@@ -19,6 +19,11 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   position:relative; overflow:hidden;
   background:transparent;
   transform:scale(var(--scale)); transform-origin:top left;
+}
+
+/* En mode horizontal, le widget ne doit pas clipper le feed */
+#widget.layout-horizontal-active{
+  overflow:visible;
 }
 
 #widget.theme-monster{ --name-bg:#befe2b; --name-text:#111111; --bubble-bg:#2b2d39; --bubble-bg-2:#242633; --bubble-text:#f6fbff; }
@@ -47,28 +52,32 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    FEED — MODE HORIZONTAL
+   Position fixed pour sortir du clip du #widget (600px)
+   et occuper toute la largeur de l’écran.
 ================================================================ */
 #feed.layout-horizontal{
+  position:fixed;
+  bottom:0; left:0; right:0;
+  top:auto;
+  height:auto;
+  width:100%;
   flex-direction:row;
   justify-content:flex-end;
   align-items:flex-end;
   flex-wrap:nowrap;
   overflow-x:auto;
-  overflow-y:hidden;
+  overflow-y:visible;
   gap:8px;
   padding:12px 18px;
+  box-sizing:border-box;
 }
 
 /* ================================================================
    ITEM — BASE (vertical)
-   IMPORTANT : plus de filter:drop-shadow sur .item — c’est lui qui
-   créait les coins pointus en suivant chaque enfant séparément.
-   Les ombres sont portées directement par .topline et .bubble.
 ================================================================ */
 .item{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
-  /* PAS de filter ici */
   flex-shrink:0;
   transition:
     opacity .30s ease,
@@ -113,13 +122,13 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
     margin .28s ease !important;
 }
 
-/* ---- Entrée verticale depuis le bas ---- */
+/* ---- Entrée verticale ---- */
 .item:not(.event){ animation:in-chat .3s cubic-bezier(.2,.9,.2,1) both; }
 @keyframes in-chat{
   from{ opacity:0; transform:translateY(10px) scale(.98); }
   to{   opacity:1; transform:translateY(0) scale(1); }
 }
-/* ---- Entrée horizontale depuis la droite ---- */
+/* ---- Entrée horizontale ---- */
 #feed.layout-horizontal .item:not(.event){
   animation:in-chat-h .3s cubic-bezier(.2,.9,.2,1) both;
 }
@@ -130,94 +139,92 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    ITEM CHAT — MODE HORIZONTAL
-   [topline pseudo │ bubble texte] sur une seule ligne
+   [pill pseudo complètement arrondie] [bubble texte arrondie droite]
 ================================================================ */
 #feed.layout-horizontal .item:not(.event){
   flex-direction:row !important;
   align-items:stretch !important;
   width:auto;
-  max-width:340px;
-  gap:0;
+  max-width:380px;
+  gap:4px;               /* petit espace entre pseudo et texte */
+  box-shadow:none;
+  border-radius:0;
+  overflow:visible;
 }
 
-/* Pseudo : pill gauche, coins gauche arrondis uniquement */
+/* Pseudo : pilule COMPLÈTEMENT arrondie, autonome */
 #feed.layout-horizontal .item:not(.event) .topline{
   flex-shrink:0;
-  border-radius:8px 0 0 8px;
+  border-radius:999px;   /* arrondie sur TOUS les côtés */
   font-size:12px;
-  padding:6px 10px;
+  padding:6px 12px;
   white-space:nowrap;
-  align-self:stretch;
   display:flex;
   align-items:center;
   margin:0;
-  box-shadow:none;   /* ombre sur l’ensemble du item, pas sur chaque morceau */
+  box-shadow:var(--shadow);
+  align-self:center;
 }
 
-/* Bubble texte : collée à droite, coins droits arrondis */
+/* Bubble texte : pilule arrondie droite */
 #feed.layout-horizontal .item:not(.event) .bubble{
   flex:1 1 auto;
   margin:0 !important;
-  border-radius:0 8px 8px 0;
-  padding:6px 10px;
+  border-radius:8px;
+  padding:6px 11px;
   font-size:13px;
   line-height:1.25;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:220px;
-  box-shadow:none;
-}
-/* Ombre globale sur le conteneur en horizontal (un seul box-shadow propre) */
-#feed.layout-horizontal .item:not(.event){
+  max-width:240px;
   box-shadow:var(--shadow);
-  border-radius:8px;
+  align-self:center;
 }
 
 /* ================================================================
    ITEM EVENT — MODE HORIZONTAL
-   [topline icon+nom+desc │ (optionnel: bubble message)] en ligne
+   Topline complète, bulle message optionnelle à droite
 ================================================================ */
 #feed.layout-horizontal .item.event{
   flex-direction:row !important;
-  align-items:stretch !important;
+  align-items:center !important;
   flex-shrink:0;
   width:auto;
-  max-width:360px;
-  gap:0;
+  max-width:none;        /* pas de limite : l’event s’affiche en entier */
+  gap:4px;
   filter:none;
-  box-shadow:var(--shadow);
-  border-radius:14px;
+  box-shadow:none;
+  border-radius:0;
+  overflow:visible;
 }
 
-/* Topline event horizontal : pill gauche arrondie */
+/* Topline event : pilule entière arrondie */
 #feed.layout-horizontal .item.event .topline{
   flex-shrink:0;
-  border-radius:14px 0 0 14px;
+  border-radius:14px;
   font-size:13px;
-  padding:10px 12px;
-  gap:6px;
+  padding:10px 14px;
+  gap:7px;
   flex-wrap:nowrap;
-  box-shadow:none;
-  align-items:center;
+  box-shadow:var(--shadow);
+  white-space:nowrap;
 }
 
-/* Bulle message event en horizontal : pill droite arrondie */
+/* Bulle message event : pilule arrondie à droite */
 #feed.layout-horizontal .item.event .bubble{
-  flex:1 1 auto;
+  flex:0 1 auto;
   margin:0 !important;
-  border-radius:0 14px 14px 0;
+  border-radius:10px;
   padding:8px 12px;
   font-size:13px;
   line-height:1.25;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:180px;
-  box-shadow:none;
-  align-self:stretch;
-  display:flex;
-  align-items:center;
+  max-width:200px;
+  box-shadow:var(--shadow);
+  align-self:center;
 }
 
 /* ---- ITEM event (vertical) ---- */
@@ -247,13 +254,18 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 @keyframes ev-stamp    { 0%{opacity:0;transform:scale(1.18);} 70%{opacity:1;transform:scale(.94);} 100%{opacity:1;transform:scale(1);} }
 @keyframes ev-wave     { 0%{opacity:0;transform:translateY(14px) skewY(5deg);} 55%{opacity:1;transform:translateY(-4px) skewY(-3deg);} 100%{opacity:1;transform:translateY(0) skewY(0);} }
 
-/* ---- TOPLINE chat (vertical) ---- */
+/* ================================================================
+   TOPLINE chat (vertical)
+   Ombre légère seulement, pas de double-ombre avec la bubble
+================================================================ */
 .item .topline{
   display:inline-flex; align-items:center; gap:6px;
   background:var(--name-bg); color:var(--name-text);
   padding:5px 10px 6px; border-radius:8px;
   font-size:14px; font-weight:800; line-height:1;
-  box-shadow:var(--shadow); z-index:3;
+  /* ombre très légère — la bulle en dessous fait le "fond" visuel */
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
+  z-index:3;
 }
 .item .badges{ display:inline-flex; align-items:center; gap:3px; }
 .item .badge{ width:14px; height:14px; display:inline-block; flex:0 0 auto; }
@@ -308,7 +320,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   background:var(--name-bg); color:var(--name-text);
   padding:20px 16px; border-radius:14px;
   font-size:17px; font-weight:800; line-height:1.4;
-  box-shadow:0 8px 24px rgba(0,0,0,.22), 0 2px 6px rgba(0,0,0,.15);
+  box-shadow:var(--shadow);
   word-break:break-word;
 }
 .item.event .ev-icon{ font-size:21px; line-height:1; flex:0 0 auto; display:inline-flex; align-items:center; }
