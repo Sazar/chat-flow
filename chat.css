@@ -41,21 +41,27 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   display:flex; flex-direction:column; align-items:flex-start;
   filter:drop-shadow(var(--shadow));
   flex-shrink:0;
-  transition: opacity .28s ease, transform .28s ease, max-height .28s ease, margin .28s ease;
+  transition: opacity .32s ease, transform .32s ease, max-height .32s ease, margin .32s ease;
   max-height:400px;
 }
-/* Sortie vers le haut */
+
+/* ================================================================
+   SORTIE : slide vers le haut + fade
+   Le message part visuellement vers le haut avant de disparaître.
+================================================================ */
 .item.removing{
   opacity:0;
-  transform:translateY(-8px) scale(.98);
-  max-height:0;
-  margin:0;
+  transform:translateY(-24px) scale(.96);
+  max-height:0 !important;
+  margin:0 !important;
   pointer-events:none;
 }
+
+/* Entrée depuis le bas */
 .item:not(.event){ animation: in-chat .3s cubic-bezier(.2,.9,.2,1) both; }
 @keyframes in-chat{
-  from{ opacity:0; transform:translateY(8px) scale(.98); }
-  to{   opacity:1; transform:translateY(0) scale(1); }
+  from{ opacity:0; transform:translateY(10px) scale(.98); }
+  to{   opacity:1; transform:translateY(0)    scale(1);   }
 }
 
 /* ---- ITEM event ---- */
@@ -75,15 +81,15 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 .item.event.anim-stamp    { animation: ev-stamp .28s cubic-bezier(.2,.9,.2,1) both; }
 .item.event.anim-wave     { animation: ev-wave .55s ease both; }
 
-@keyframes ev-slide{ from{ opacity:0; transform:translateY(28px);} to{ opacity:1; transform:translateY(0);} }
-@keyframes ev-pop{ from{ opacity:0; transform:scale(.5);} to{ opacity:1; transform:scale(1);} }
-@keyframes ev-bounce{ 0%{opacity:0;transform:translateY(32px) scale(.95);} 55%{opacity:1;transform:translateY(-8px) scale(1.03);} 75%{transform:translateY(4px) scale(.98);} 90%{transform:translateY(-3px) scale(1.01);} 100%{transform:translateY(0) scale(1);} }
-@keyframes ev-flip{ from{opacity:0;transform:perspective(400px) rotateX(-70deg) translateY(20px);} to{opacity:1;transform:perspective(400px) rotateX(0deg) translateY(0);} }
-@keyframes ev-glow{ 0%{opacity:0;transform:scale(.95);} 60%{opacity:1;transform:scale(1.02);} 100%{opacity:1;transform:scale(1);} }
-@keyframes ev-zoomleft{ from{opacity:0;transform:translateX(-40px) scale(.82);} to{opacity:1;transform:translateX(0) scale(1);} }
-@keyframes ev-swing{ 0%{opacity:0;transform:rotate(-8deg) translateY(8px);} 45%{opacity:1;transform:rotate(5deg);} 70%{transform:rotate(-3deg);} 100%{transform:rotate(0);} }
-@keyframes ev-stamp{ 0%{opacity:0;transform:scale(1.18);} 70%{opacity:1;transform:scale(.94);} 100%{opacity:1;transform:scale(1);} }
-@keyframes ev-wave{ 0%{opacity:0;transform:translateY(14px) skewY(5deg);} 55%{opacity:1;transform:translateY(-4px) skewY(-3deg);} 100%{opacity:1;transform:translateY(0) skewY(0);} }
+@keyframes ev-slide    { from{ opacity:0; transform:translateY(28px);} to{ opacity:1; transform:translateY(0);} }
+@keyframes ev-pop      { from{ opacity:0; transform:scale(.5);} to{ opacity:1; transform:scale(1);} }
+@keyframes ev-bounce   { 0%{opacity:0;transform:translateY(32px) scale(.95);} 55%{opacity:1;transform:translateY(-8px) scale(1.03);} 75%{transform:translateY(4px) scale(.98);} 90%{transform:translateY(-3px) scale(1.01);} 100%{transform:translateY(0) scale(1);} }
+@keyframes ev-flip     { from{opacity:0;transform:perspective(400px) rotateX(-70deg) translateY(20px);} to{opacity:1;transform:perspective(400px) rotateX(0deg) translateY(0);} }
+@keyframes ev-glow     { 0%{opacity:0;transform:scale(.95);} 60%{opacity:1;transform:scale(1.02);} 100%{opacity:1;transform:scale(1);} }
+@keyframes ev-zoomleft { from{opacity:0;transform:translateX(-40px) scale(.82);} to{opacity:1;transform:translateX(0) scale(1);} }
+@keyframes ev-swing    { 0%{opacity:0;transform:rotate(-8deg) translateY(8px);} 45%{opacity:1;transform:rotate(5deg);} 70%{transform:rotate(-3deg);} 100%{transform:rotate(0);} }
+@keyframes ev-stamp    { 0%{opacity:0;transform:scale(1.18);} 70%{opacity:1;transform:scale(.94);} 100%{opacity:1;transform:scale(1);} }
+@keyframes ev-wave     { 0%{opacity:0;transform:translateY(14px) skewY(5deg);} 55%{opacity:1;transform:translateY(-4px) skewY(-3deg);} 100%{opacity:1;transform:translateY(0) skewY(0);} }
 
 /* ---- TOPLINE chat ---- */
 .item .topline{
@@ -111,7 +117,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   vertical-align:middle !important; margin:-2px 1px !important; display:inline-block !important;
 }
 
-/* ---- REPLY Style ---- */
+/* ---- REPLY ---- */
 .item.reply .bubble{ padding-top:12px; }
 .reply-ref{
   display:flex; align-items:flex-start; gap:8px;
@@ -133,7 +139,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
 }
 
-/* ---- MENTION HIGHLIGHT ---- */
+/* ---- MENTION ---- */
 .item.mention .bubble{
   border:2px solid var(--highlight-color);
   box-shadow:var(--shadow), 0 0 10px 2px color-mix(in srgb, var(--highlight-color) 40%, transparent);
@@ -158,81 +164,103 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
    PILULES
 ================================================================ */
 .item.event .ev-kind-wrap{
-  flex:0 0 auto; margin-left:4px;
+  flex:0 0 auto;
+  margin-left:4px;
   border-radius:999px;
+  /* Pas d'overflow ni position ici pour ne pas polluer le rendu */
 }
+
+/* Base pilule : NI overflow NI position relative — texte net garanti */
 .item.event .ev-kind{
-  /* position:relative + overflow:hidden = obligatoire pour le sheen ::before */
-  position:relative;
-  overflow:hidden;
   display:inline-block;
   font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
   padding:5px 10px; border-radius:999px; line-height:1;
   white-space:nowrap;
   background:rgba(0,0,0,.22); color:inherit;
+  /* transform 3D force un layer GPU propre = sous-pixel stable */
+  transform:translateZ(0);
 }
 
-/* T2 — pulse violet */
+/* ---- T2 — pulse violet ---- */
 .item.event .ev-kind.tier2{
   background:#7c3aed; color:#ffffff;
   animation: pulse-t2 2.2s ease-in-out infinite;
 }
 @keyframes pulse-t2{
-  0%,100%{ box-shadow:0 0 6px 1px rgba(124,58,237,.5),0 0 14px 3px rgba(124,58,237,.25); }
-  50%{ box-shadow:0 0 14px 4px rgba(167,109,255,.85),0 0 28px 8px rgba(124,58,237,.4); }
+  0%,100%{ box-shadow:0 0 6px 1px rgba(124,58,237,.5), 0 0 14px 3px rgba(124,58,237,.25); }
+  50%{     box-shadow:0 0 16px 5px rgba(167,109,255,.9), 0 0 32px 10px rgba(124,58,237,.45); }
 }
 
 /* ================================================================
-   T3 — SHEEN DORÉ PREMIUM
-   Principe : ZÉRO transform animé sur le texte → pas de flou.
-   Seul le pseudo-élément ::before (sheen) anime en opacity + translateX.
-   Le texte reste parfaitement net.
+   T3 — OR FLASHY, TEXTE 100% NET
+
+   Stratégie :
+   • La pilule (.ev-kind.tier3) est STATIQUE — zéro animation dessus.
+     background dégradé doré fixe + border or fin + text-shadow léger.
+   • L'animation est portée par .ev-kind-wrap (le parent), qui lui
+     n'a PAS de texte → aucun risque de flou.
+   • On anime box-shadow sur le WRAP pour créer le halo pulsant.
+   • On anime opacity sur un élément ::before du WRAP pour le flash.
 ================================================================ */
-.item.event .ev-kind.tier3{
-  background:linear-gradient(135deg, #b45309 0%, #d97706 40%, #fbbf24 70%, #f59e0b 100%);
-  color:#1a0a00;
-  box-shadow:
-    0 0 0 1.5px rgba(253,230,138,.7),
-    0 0 10px 2px rgba(245,158,11,.45),
-    0 2px 4px rgba(0,0,0,.3);
-  /* Pas d'animation sur l'élément lui-même : texte net */
-}
-/* Halo doré pulsant autour de la pilule — opacity uniquement, aucun transform */
-.item.event .ev-kind.tier3::after{
-  content:'';
-  position:absolute;
-  inset:-3px;
+
+/* Wrap T3 : position relative pour ::before, PAS overflow hidden */
+.item.event .ev-kind-wrap.t3-wrap{
+  position:relative;
+  /* Halo doré pulsant via box-shadow sur le wrap */
+  animation: t3-wrap-halo 2.2s ease-in-out infinite;
   border-radius:999px;
-  background:transparent;
-  box-shadow: 0 0 0 1.5px rgba(253,230,138,.6);
-  animation: t3-halo 2.4s ease-in-out infinite;
-  pointer-events:none;
-  /* will-change:opacity évite le flou subpixel */
-  will-change:opacity;
 }
-@keyframes t3-halo{
-  0%,100%{ opacity:.4; }
-  50%{ opacity:1; }
-}
-/* Sheen lumineux qui traverse — translateX sur un pseudo séparé */
-.item.event .ev-kind.tier3::before{
-  content:'';
-  position:absolute;
-  top:0; left:-60%;
-  width:50%; height:100%;
-  background:linear-gradient(90deg, transparent, rgba(255,253,220,.75), transparent);
-  animation: t3-sheen 2.8s ease-in-out infinite;
-  pointer-events:none;
-  will-change:transform, opacity;
-}
-@keyframes t3-sheen{
-  0%,15% { transform:translateX(0);   opacity:0; }
-  25%    { opacity:1; }
-  55%    { transform:translateX(320%); opacity:0; }
-  100%   { transform:translateX(320%); opacity:0; }
+@keyframes t3-wrap-halo{
+  0%,100%{ box-shadow: 0 0 0 0 rgba(251,191,36,0),   0 0 6px  2px rgba(245,158,11,.3); }
+  50%{     box-shadow: 0 0 0 4px rgba(251,191,36,.35), 0 0 20px 6px rgba(245,158,11,.65); }
 }
 
-/* Prime — bleu fixe */
+/* Flash doré qui traverse — sur ::before du WRAP, pas de la pilule */
+.item.event .ev-kind-wrap.t3-wrap::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:999px;
+  /* dégradé balayant de gauche à droite */
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,200,.0) 20%,
+    rgba(255,253,180,.85) 50%,
+    rgba(255,255,200,.0) 80%,
+    transparent 100%
+  );
+  animation: t3-flash 2.8s ease-in-out infinite;
+  pointer-events:none;
+  /* will-change uniquement sur opacity+transform du PSEUDO, pas du texte */
+  will-change:opacity, transform;
+}
+@keyframes t3-flash{
+  0%,18%  { opacity:0; transform:scaleX(.1) translateX(-100%); }
+  30%     { opacity:1; transform:scaleX(1)  translateX(0%); }
+  55%     { opacity:0; transform:scaleX(1)  translateX(100%); }
+  100%    { opacity:0; transform:scaleX(.1) translateX(100%); }
+}
+
+/* La pilule elle-même : statique, zéro animation, texte parfaitement net */
+.item.event .ev-kind.tier3{
+  background: linear-gradient(135deg,
+    #92400e 0%,
+    #b45309 25%,
+    #d97706 50%,
+    #fbbf24 75%,
+    #fde68a 100%
+  );
+  color:#1a0800;
+  /* contour doré vif + ombre portée */
+  box-shadow:
+    0 0 0 1.5px rgba(253,230,138,.9),
+    0 0 0 3px   rgba(217,119,6,.4),
+    0 2px 6px   rgba(0,0,0,.4);
+  /* text-shadow subtil pour lisibilité — STATIQUE, pas de flou animé */
+  text-shadow: 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* ---- Prime — bleu fixe ---- */
 .item.event .ev-kind.prime{
   background:linear-gradient(135deg,#0070e0,#00b4ff);
   color:#ffffff;
