@@ -2,7 +2,7 @@
 
 :root{
   --font:"Inter",sans-serif;
-  --shadow:0 4px 12px rgba(0,0,0,.22);
+  --shadow:0 4px 14px rgba(0,0,0,.28);
   --scale:1;
   --name-bg:#befe2b;
   --name-text:#111111;
@@ -20,11 +20,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   background:transparent;
   transform:scale(var(--scale)); transform-origin:top left;
 }
-
-/* En mode horizontal, le widget ne doit pas clipper le feed */
-#widget.layout-horizontal-active{
-  overflow:visible;
-}
+#widget.layout-horizontal-active{ overflow:visible; }
 
 #widget.theme-monster{ --name-bg:#befe2b; --name-text:#111111; --bubble-bg:#2b2d39; --bubble-bg-2:#242633; --bubble-text:#f6fbff; }
 #widget.theme-pastel{  --name-bg:#ffccf2; --name-text:#2b2140; --bubble-bg:#f7f0ff; --bubble-bg-2:#efe7ff; --bubble-text:#3b2b58; }
@@ -32,19 +28,15 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 #widget.theme-candy{   --name-bg:#ff7ab6; --name-text:#ffffff; --bubble-bg:#1f2937; --bubble-bg-2:#111827; --bubble-text:#f9fafb; }
 
 /* ================================================================
-   FEED — MODE VERTICAL (défaut)
+   FEED — MODE VERTICAL
 ================================================================ */
 #feed{
   position:absolute; inset:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-end;
-  align-items:flex-start;
-  gap:10px;
-  padding:18px;
+  display:flex; flex-direction:column;
+  justify-content:flex-end; align-items:flex-start;
+  gap:10px; padding:18px;
   box-sizing:border-box;
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow-y:auto; overflow-x:hidden;
   scroll-behavior:smooth;
 }
 #feed::-webkit-scrollbar{ display:none; }
@@ -52,68 +44,73 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    FEED — MODE HORIZONTAL
-   Position fixed pour sortir du clip du #widget (600px)
-   et occuper toute la largeur de l’écran.
 ================================================================ */
 #feed.layout-horizontal{
   position:fixed;
-  bottom:0; left:0; right:0;
-  top:auto;
-  height:auto;
-  width:100%;
+  bottom:0; left:0; right:0; top:auto;
+  height:auto; width:100%;
   flex-direction:row;
-  justify-content:flex-end;
-  align-items:flex-end;
+  justify-content:flex-end; align-items:flex-end;
   flex-wrap:nowrap;
-  overflow-x:auto;
-  overflow-y:visible;
-  gap:8px;
-  padding:12px 18px;
+  overflow-x:auto; overflow-y:visible;
+  gap:8px; padding:12px 18px;
   box-sizing:border-box;
 }
 
 /* ================================================================
    ITEM — BASE (vertical)
+   L'ombre est portée par .item via filter:drop-shadow,
+   ce qui suit les border-radius des enfants sans artefact anguleux.
+   overflow:visible nécessaire pour que le drop-shadow soit visible.
 ================================================================ */
 .item{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
   flex-shrink:0;
+  filter:drop-shadow(var(--shadow));
+  overflow:visible;
   transition:
-    opacity .30s ease,
-    transform .30s ease,
-    clip-path .30s ease,
-    margin-bottom .30s ease,
-    max-height .30s ease;
+    opacity .32s ease,
+    transform .32s ease,
+    max-height .32s ease,
+    margin-bottom .32s ease;
   max-height:400px;
-  overflow:hidden;
 }
 
 /* ================================================================
-   SORTIE VERTICALE — aspiré vers le haut
+   SORTIE VERTICALE — texte glisse vers le haut + fade
+   On anime le contenu interne (.topline + .bubble) via un wrapper,
+   mais comme on n'a pas de wrapper interne, on anime directement
+   l'item : translateY vers le haut + opacity 0.
+   max-height → 0 pour que les items du dessous remontent.
+   overflow:hidden pendant la sortie pour clipper le glissement.
 ================================================================ */
 .item.removing{
   opacity:0;
-  transform:translateY(-18px) scale(.97);
-  clip-path:inset(0 0 100% 0);
+  transform:translateY(-28px);
   max-height:0 !important;
   margin-bottom:-10px !important;
+  overflow:hidden !important;
   pointer-events:none;
+  transition:
+    opacity .35s ease,
+    transform .35s ease,
+    max-height .35s ease,
+    margin-bottom .35s ease !important;
 }
 
 /* ================================================================
    SORTIE HORIZONTALE — disparaît vers la gauche
 ================================================================ */
 #feed.layout-horizontal .item.removing{
-  clip-path:none !important;
-  transform:translateX(-20px) scale(.95) !important;
+  transform:translateX(-24px) !important;
   opacity:0;
   max-width:0 !important;
   width:0 !important;
   min-width:0 !important;
   padding:0 !important;
   margin:0 !important;
-  overflow:hidden;
+  overflow:hidden !important;
   transition:
     opacity .28s ease,
     transform .28s ease,
@@ -139,67 +136,68 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    ITEM CHAT — MODE HORIZONTAL
-   [pill pseudo complètement arrondie] [bubble texte arrondie droite]
+   Pilule pseudo se superpose sur la bulle texte (margin-right négatif)
 ================================================================ */
 #feed.layout-horizontal .item:not(.event){
   flex-direction:row !important;
-  align-items:stretch !important;
+  align-items:center !important;
   width:auto;
-  max-width:380px;
-  gap:4px;               /* petit espace entre pseudo et texte */
-  box-shadow:none;
-  border-radius:0;
+  max-width:400px;
+  gap:0;
+  filter:none;     /* drop-shadow individuel sur chaque pilule */
   overflow:visible;
 }
 
-/* Pseudo : pilule COMPLÈTEMENT arrondie, autonome */
+/* Pseudo : pilule totalement arrondie, z-index élevé, dépasse sur la bubble */
 #feed.layout-horizontal .item:not(.event) .topline{
   flex-shrink:0;
-  border-radius:999px;   /* arrondie sur TOUS les côtés */
+  border-radius:999px;
   font-size:12px;
-  padding:6px 12px;
+  padding:7px 13px;
   white-space:nowrap;
   display:flex;
   align-items:center;
   margin:0;
-  box-shadow:var(--shadow);
+  margin-right:-14px;   /* superposition sur la bubble */
+  z-index:3;
+  position:relative;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.32));
   align-self:center;
 }
 
-/* Bubble texte : pilule arrondie droite */
+/* Bubble texte : reçoit la superposition, coins entièrement arrondis */
 #feed.layout-horizontal .item:not(.event) .bubble{
   flex:1 1 auto;
   margin:0 !important;
-  border-radius:8px;
-  padding:6px 11px;
+  border-radius:999px;
+  padding:7px 14px 7px 22px;   /* padding-left large pour laisser place au pseudo */
   font-size:13px;
   line-height:1.25;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:240px;
-  box-shadow:var(--shadow);
+  max-width:260px;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.22));
   align-self:center;
+  position:relative;
+  z-index:2;
 }
 
 /* ================================================================
    ITEM EVENT — MODE HORIZONTAL
-   Topline complète, bulle message optionnelle à droite
 ================================================================ */
 #feed.layout-horizontal .item.event{
   flex-direction:row !important;
   align-items:center !important;
   flex-shrink:0;
   width:auto;
-  max-width:none;        /* pas de limite : l’event s’affiche en entier */
-  gap:4px;
+  max-width:none;
+  gap:0;
   filter:none;
-  box-shadow:none;
-  border-radius:0;
   overflow:visible;
 }
 
-/* Topline event : pilule entière arrondie */
+/* Topline event : pilule autonome arrondie, superposée sur bubble */
 #feed.layout-horizontal .item.event .topline{
   flex-shrink:0;
   border-radius:14px;
@@ -207,24 +205,29 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   padding:10px 14px;
   gap:7px;
   flex-wrap:nowrap;
-  box-shadow:var(--shadow);
   white-space:nowrap;
+  position:relative;
+  z-index:3;
+  margin-right:-14px;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.32));
 }
 
-/* Bulle message event : pilule arrondie à droite */
+/* Bubble message event horizontal */
 #feed.layout-horizontal .item.event .bubble{
   flex:0 1 auto;
   margin:0 !important;
   border-radius:10px;
-  padding:8px 12px;
+  padding:8px 14px 8px 22px;
   font-size:13px;
   line-height:1.25;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
   max-width:200px;
-  box-shadow:var(--shadow);
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.22));
   align-self:center;
+  position:relative;
+  z-index:2;
 }
 
 /* ---- ITEM event (vertical) ---- */
@@ -256,16 +259,15 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    TOPLINE chat (vertical)
-   Ombre légère seulement, pas de double-ombre avec la bubble
+   PAS de box-shadow ici — l'ombre vient du filter:drop-shadow du .item
 ================================================================ */
 .item .topline{
   display:inline-flex; align-items:center; gap:6px;
   background:var(--name-bg); color:var(--name-text);
   padding:5px 10px 6px; border-radius:8px;
   font-size:14px; font-weight:800; line-height:1;
-  /* ombre très légère — la bulle en dessous fait le "fond" visuel */
-  box-shadow:0 2px 6px rgba(0,0,0,.15);
-  z-index:3;
+  box-shadow:none;
+  z-index:3; position:relative;
 }
 .item .badges{ display:inline-flex; align-items:center; gap:3px; }
 .item .badge{ width:14px; height:14px; display:inline-block; flex:0 0 auto; }
@@ -276,7 +278,8 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   background:var(--bubble-bg); color:var(--bubble-text);
   padding:16px 13px 10px; border-radius:9px;
   font-size:16px; line-height:1.3; font-weight:500;
-  box-shadow:var(--shadow); max-width:100%;
+  box-shadow:none;   /* ombre via filter:drop-shadow du .item */
+  max-width:100%;
   word-break:break-word; white-space:pre-wrap;
 }
 .item.alt .bubble{ background:var(--bubble-bg-2); }
@@ -310,7 +313,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 /* ---- MENTION ---- */
 .item.mention .bubble{
   border:2px solid var(--highlight-color);
-  box-shadow:var(--shadow), 0 0 10px 2px color-mix(in srgb, var(--highlight-color) 40%, transparent);
+  box-shadow:0 0 10px 2px color-mix(in srgb, var(--highlight-color) 40%, transparent);
 }
 .mention-tag{ color:var(--highlight-color); font-weight:700; }
 
@@ -357,7 +360,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 }
 
 /* ================================================================
-   T3 — OR FLASHY, TEXTE NET
+   T3 — OR FLASHY
 ================================================================ */
 .item.event .ev-kind-wrap.t3-wrap{
   position:relative;
