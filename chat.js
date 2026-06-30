@@ -5,8 +5,6 @@ let widgetLoaded = false;
 let eventQueue = [];
 let eventQueueBusy = false;
 
-var WIDGET_BASE_WIDTH = 600;
-
 function esc(s){
   return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
@@ -30,40 +28,6 @@ function getEventQueueDelay(){
 function isHorizontalLayout(){
   var feed = document.getElementById('feed');
   return feed && feed.classList.contains('layout-horizontal');
-}
-
-/**
- * En mode horizontal, le feed est position:fixed dans l'iframe SE (600px CSS).
- * SE applique transform:scale en dehors de l'iframe — donc le feed doit faire
- * exactement WIDGET_BASE_WIDTH (600px CSS) pour couvrir toute la zone SE.
- *
- * widgetWidth (field) représente la largeur réelle de la zone configurée dans SE.
- * scale SE implicite = widgetWidth / WIDGET_BASE_WIDTH
- * Pour que le feed couvre la zone : feedWidth_CSS = widgetWidth / scale_SE = WIDGET_BASE_WIDTH
- *
- * => On force toujours 100vw (= 600px dans l'iframe SE).
- * => En preview locale (window.innerWidth > WIDGET_BASE_WIDTH), on applique widgetWidth directement.
- *
- * Mais le vrai problème n'est PAS la largeur du feed — c'est que les items
- * doivent s'étirer (flex:1 1 0) pour remplir toute la ligne. C'est géré en CSS.
- */
-function fixHorizontalFeedWidth(){
-  var feed = document.getElementById('feed');
-  if (!feed || !feed.classList.contains('layout-horizontal')) return;
-
-  var root = document.documentElement;
-
-  // Dans l'iframe SE : window.innerWidth = 600px = WIDGET_BASE_WIDTH
-  // 100vw couvre exactement la zone SE (SE applique le scale en dehors)
-  var cssWidth = '100vw';
-
-  // En preview locale hors SE (window.innerWidth > WIDGET_BASE_WIDTH)
-  var targetWidth = parseInt(fd.widgetWidth, 10);
-  if (!isNaN(targetWidth) && targetWidth > 0 && window.innerWidth > WIDGET_BASE_WIDTH + 10) {
-    cssWidth = targetWidth + 'px';
-  }
-
-  root.style.setProperty('--h-feed-width', cssWidth);
 }
 
 function applyThemeVars(){
@@ -93,11 +57,8 @@ function applyThemeVars(){
     var layout = String(fd.chatLayout || 'vertical').toLowerCase();
     if (layout === 'horizontal') {
       feed.classList.add('layout-horizontal');
-      setTimeout(fixHorizontalFeedWidth, 0);
     } else {
       feed.classList.remove('layout-horizontal');
-      feed.style.width = '';
-      document.documentElement.style.removeProperty('--h-feed-width');
     }
   }
 }
@@ -326,7 +287,7 @@ function removeOldestIfNeeded(feed){
     var old = feed.firstElementChild;
     if(!old) break;
     old.classList.add('removing');
-    setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 340);
+    setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 480);
     break;
   }
 }
@@ -403,7 +364,6 @@ window.addEventListener('onWidgetLoad',function(obj){
   if(fd.testMessages) setTimeout(testSequence,300);
 });
 window.addEventListener('load',function(){ setTimeout(function(){ if(!widgetLoaded){ applyThemeVars(); testSequence(); } },500); });
-window.addEventListener('resize', fixHorizontalFeedWidth);
 window.addEventListener('onEventReceived',function(obj){
   var listener=obj.detail.listener, event=(obj.detail.event)||{}, data=event.data||event;
   if(listener==='message'){

@@ -10,7 +10,6 @@
   --bubble-bg-2:#242633;
   --bubble-text:#f6fbff;
   --highlight-color:#f59e0b;
-  --h-feed-width:100vw;
 }
 
 html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transparent; font-family:var(--font); }
@@ -21,7 +20,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   background:transparent;
   transform:scale(var(--scale)); transform-origin:top left;
 }
-#widget.layout-horizontal-active{ overflow:visible; }
 
 #widget.theme-monster{ --name-bg:#befe2b; --name-text:#111111; --bubble-bg:#2b2d39; --bubble-bg-2:#242633; --bubble-text:#f6fbff; }
 #widget.theme-pastel{  --name-bg:#ffccf2; --name-text:#2b2140; --bubble-bg:#f7f0ff; --bubble-bg-2:#efe7ff; --bubble-text:#3b2b58; }
@@ -45,21 +43,23 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    FEED — MODE HORIZONTAL
-   Les items s'étirent pour remplir toute la largeur (justify-content:stretch).
-   Pas de scroll horizontal — tout rentre sur une seule ligne.
+   position:fixed échappe au clip du #widget (600px).
+   width:100vw = toute la largeur de l’iframe SE = toute la zone configurée.
+   Les items gardent leur taille naturelle (pas de flex-stretch).
+   overflow:hidden masque ce qui dépasse à gauche quand trop de messages.
 ================================================================ */
 #feed.layout-horizontal{
   position:fixed;
   bottom:0; left:0; top:auto;
   height:auto;
-  width:var(--h-feed-width, 100vw);
+  width:100vw;
   flex-direction:row;
-  justify-content:flex-start;
+  justify-content:flex-end;
   align-items:flex-end;
   flex-wrap:nowrap;
-  overflow:visible;
-  gap:6px;
-  padding:12px 10px;
+  overflow:hidden;
+  gap:8px;
+  padding:12px 14px;
   box-sizing:border-box;
 }
 
@@ -72,59 +72,37 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   flex-shrink:0;
   filter:drop-shadow(var(--shadow));
   overflow:visible;
-  transition:
-    opacity .32s ease,
-    transform .32s ease,
-    max-height .32s ease,
-    margin-bottom .32s ease;
   max-height:400px;
 }
 
 /* ================================================================
-   ITEM — MODE HORIZONTAL  (stretch sur toute la ligne)
+   ANIMATION SORTIE VERTICALE — monte + s’estompe
 ================================================================ */
-#feed.layout-horizontal .item{
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: none;
-  width: auto;
+@keyframes fade-up-out{
+  0%   { opacity:1; transform:translateY(0);      max-height:400px; margin-bottom:0;  }
+  60%  { opacity:0; transform:translateY(-40px);  max-height:400px; margin-bottom:0;  }
+  100% { opacity:0; transform:translateY(-60px);  max-height:0;     margin-bottom:-10px; }
+}
+
+.item.removing{
+  animation: fade-up-out .45s cubic-bezier(.4,0,.6,1) forwards;
+  pointer-events:none;
+  overflow:hidden !important;
 }
 
 /* ================================================================
-   SORTIE VERTICALE
+   SORTIE HORIZONTALE — glisse à gauche + s’estompe
 ================================================================ */
-.item.removing{
-  opacity:0;
-  transform:translateY(-28px);
-  max-height:0 !important;
-  margin-bottom:-10px !important;
+@keyframes fade-left-out{
+  0%   { opacity:1; transform:translateX(0);     max-width:400px; margin-right:0; }
+  60%  { opacity:0; transform:translateX(-30px); max-width:400px; margin-right:0; }
+  100% { opacity:0; transform:translateX(-50px); max-width:0;     margin-right:-8px; }
+}
+
+#feed.layout-horizontal .item.removing{
+  animation: fade-left-out .38s cubic-bezier(.4,0,.6,1) forwards !important;
   overflow:hidden !important;
   pointer-events:none;
-  transition:
-    opacity .35s ease,
-    transform .35s ease,
-    max-height .35s ease,
-    margin-bottom .35s ease !important;
-}
-
-/* ================================================================
-   SORTIE HORIZONTALE
-================================================================ */
-#feed.layout-horizontal .item.removing{
-  transform:translateX(-24px) !important;
-  opacity:0;
-  flex:0 0 0 !important;
-  min-width:0 !important;
-  width:0 !important;
-  padding:0 !important;
-  margin:0 !important;
-  overflow:hidden !important;
-  transition:
-    opacity .28s ease,
-    transform .28s ease,
-    flex .28s ease,
-    width .28s ease,
-    margin .28s ease !important;
 }
 
 /* ---- Entrée verticale ---- */
@@ -133,29 +111,31 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   from{ opacity:0; transform:translateY(10px) scale(.98); }
   to{   opacity:1; transform:translateY(0) scale(1); }
 }
+
 /* ---- Entrée horizontale ---- */
 #feed.layout-horizontal .item:not(.event){
   animation:in-chat-h .3s cubic-bezier(.2,.9,.2,1) both;
 }
 @keyframes in-chat-h{
-  from{ opacity:0; transform:translateX(18px) scale(.98); }
+  from{ opacity:0; transform:translateX(20px) scale(.98); }
   to{   opacity:1; transform:translateX(0) scale(1); }
 }
 
 /* ================================================================
    ITEM CHAT — MODE HORIZONTAL
-   align-items:stretch : topline et bubble même hauteur.
-   border-radius:9px identique sur topline et bubble.
 ================================================================ */
 #feed.layout-horizontal .item:not(.event){
   flex-direction:row !important;
   align-items:stretch !important;
+  width:auto;
+  max-width:360px;
+  flex-shrink:0;
   gap:0;
   filter:drop-shadow(0 4px 14px rgba(0,0,0,.28));
   overflow:visible;
 }
 
-/* Pseudo — même arrondi que la bubble */
+/* Pseudo */
 #feed.layout-horizontal .item:not(.event) .topline{
   flex-shrink:0;
   border-radius:9px;
@@ -171,7 +151,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   box-shadow:none;
 }
 
-/* Bubble texte — s'étire pour prendre le reste */
+/* Bubble texte */
 #feed.layout-horizontal .item:not(.event) .bubble{
   flex:1 1 auto;
   min-width:0;
@@ -183,7 +163,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:none;
   display:flex;
   align-items:center;
   position:relative;
@@ -198,6 +177,8 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   flex-direction:row !important;
   align-items:stretch !important;
   flex-shrink:0;
+  width:auto;
+  max-width:none;
   gap:0;
   filter:none;
   overflow:visible;
