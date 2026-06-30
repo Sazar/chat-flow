@@ -47,7 +47,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    FEED — MODE HORIZONTAL
-   Les messages défilent de droite à gauche, alignés en bas.
+   Messages côte à côte en bas, défilent de droite à gauche.
 ================================================================ */
 #feed.layout-horizontal{
   flex-direction:row;
@@ -56,73 +56,123 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   flex-wrap:nowrap;
   overflow-x:auto;
   overflow-y:hidden;
-  gap:10px;
+  gap:8px;
   padding:12px 18px;
 }
 
-/* En mode horizontal, chaque item a une largeur fixe et s'adapte */
-#feed.layout-horizontal .item{
+/* ----------------------------------------------------------------
+   ITEM chat en mode horizontal
+   → flex-row : [topline pseudo | bubble texte] sur une seule ligne
+---------------------------------------------------------------- */
+#feed.layout-horizontal .item:not(.event){
+  flex-direction:row !important;
+  align-items:center !important;
+  width:auto;
+  max-width:320px;
+  gap:0;
+  filter:drop-shadow(var(--shadow));
+}
+
+/* Topline pseudo : petit pill à gauche */
+#feed.layout-horizontal .item:not(.event) .topline{
   flex-shrink:0;
-  width:200px;
-  max-width:200px;
-  min-width:0;
-}
-/* Bulles plus compactes horizontalement */
-#feed.layout-horizontal .item .bubble{
-  font-size:13px;
-  padding:10px 9px 8px;
-  word-break:break-word;
-  white-space:normal;
-}
-#feed.layout-horizontal .item .topline{
+  border-radius:8px 0 0 8px;
   font-size:12px;
-  padding:4px 8px 5px;
+  padding:6px 10px;
+  white-space:nowrap;
+  z-index:2;
+  /* override du margin-bottom vertical */
+  margin:0;
 }
-/* Events horizontaux un peu plus larges */
-#feed.layout-horizontal .item.event{
-  width:220px;
+
+/* Bubble texte : collée à droite du pseudo */
+#feed.layout-horizontal .item:not(.event) .bubble{
+  flex:1 1 auto;
+  margin:0 !important;      /* annule margin-top:-8px et margin-left:10px */
+  border-radius:0 8px 8px 0;
+  padding:6px 10px;
+  font-size:13px;
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
   max-width:220px;
+}
+
+/* Events horizontaux : garde le style vertical mais un peu plus compact */
+#feed.layout-horizontal .item.event{
+  flex-shrink:0;
+  width:auto;
+  max-width:260px;
 }
 #feed.layout-horizontal .item.event .topline{
   font-size:13px;
   padding:12px 10px;
   gap:6px;
+  border-radius:14px;
 }
 
-/* ---- ITEM chat ---- */
+/* ---- ITEM chat (vertical, défaut) ---- */
 .item{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
   filter:drop-shadow(var(--shadow));
   flex-shrink:0;
-  transition: opacity .32s ease, transform .32s ease, max-height .32s ease, margin .32s ease;
+  /* transition pour la sortie aspirée vers le haut */
+  transition:
+    opacity .30s ease,
+    transform .30s ease,
+    clip-path .30s ease,
+    margin-bottom .30s ease,
+    max-height .30s ease;
   max-height:400px;
+  overflow:hidden;
 }
 
-/* Sortie : slide vers le haut + fade */
+/* ================================================================
+   SORTIE VERTICALE — aspiré vers le haut
+   clip-path réduit de bas en haut, translateY tire vers le haut.
+   margin-bottom s'écrase pour que les voisins remontent proprement.
+================================================================ */
 .item.removing{
   opacity:0;
-  transform:translateY(-24px) scale(.96);
+  transform:translateY(-18px) scale(.97);
+  clip-path:inset(0 0 100% 0);
   max-height:0 !important;
-  margin:0 !important;
+  margin-bottom:-10px !important;
   pointer-events:none;
 }
-/* En horizontal, sortie vers la gauche */
+
+/* ================================================================
+   SORTIE HORIZONTALE — disparaît vers la gauche
+   width → 0 + translateX.
+================================================================ */
 #feed.layout-horizontal .item.removing{
-  transform:translateX(-24px) scale(.96);
+  /* reset vertical */
+  clip-path: none !important;
+  transform: translateX(-20px) scale(.95) !important;
+  opacity:0;
   max-width:0 !important;
   width:0 !important;
+  min-width:0 !important;
   padding:0 !important;
   margin:0 !important;
+  overflow:hidden;
+  transition:
+    opacity .28s ease,
+    transform .28s ease,
+    max-width .28s ease,
+    width .28s ease,
+    margin .28s ease !important;
 }
 
-/* Entrée depuis le bas */
+/* ---- Entrée verticale depuis le bas ---- */
 .item:not(.event){ animation: in-chat .3s cubic-bezier(.2,.9,.2,1) both; }
 @keyframes in-chat{
   from{ opacity:0; transform:translateY(10px) scale(.98); }
   to{   opacity:1; transform:translateY(0)    scale(1);   }
 }
-/* Entrée horizontal depuis la droite */
+/* ---- Entrée horizontale depuis la droite ---- */
 #feed.layout-horizontal .item:not(.event){
   animation: in-chat-h .3s cubic-bezier(.2,.9,.2,1) both;
 }
@@ -236,7 +286,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   border-radius:999px;
 }
 
-/* Base pilule : NI overflow NI position relative sur l'élément texte */
+/* Base pilule */
 .item.event .ev-kind{
   display:inline-block;
   font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
@@ -258,15 +308,10 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    T3 — OR VRAI FLASHY, TEXTE NET
-
-   Dégradé : jaune-or vif (pas orange foncé).
-   Glow intense amber/doré sur le WRAP (pas sur le texte).
-   Flash lumineux via ::before du WRAP.
 ================================================================ */
 .item.event .ev-kind-wrap.t3-wrap{
   position:relative;
   border-radius:999px;
-  /* Halo doré ultra-vif, pulsant */
   animation: t3-wrap-halo 1.8s ease-in-out infinite;
 }
 @keyframes t3-wrap-halo{
@@ -284,7 +329,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   }
 }
 
-/* Flash doré qui balaye — sur ::before du WRAP, jamais sur le texte */
 .item.event .ev-kind-wrap.t3-wrap::before{
   content:'';
   position:absolute;
@@ -308,7 +352,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   100%    { opacity:0; transform:scaleX(.1) translateX(120%); }
 }
 
-/* Pilule T3 elle-même : STATIQUE, jaune-or éclatant, texte sombre net */
+/* Pilule T3 statique — jaune-or éclatant */
 .item.event .ev-kind.tier3{
   background: linear-gradient(135deg,
     #ca8a04 0%,
