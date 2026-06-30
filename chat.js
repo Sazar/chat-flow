@@ -46,7 +46,16 @@ function applyThemeVars(){
   };
   var t = themes[theme] || themes.monster;
   var useCustom = !!fd.useNameBarColor;
-  w.style.setProperty('--name-bg',   useCustom && fd.nameBg   ? fd.nameBg   : t.nameBg);
+  var color1 = useCustom && fd.nameBg  ? fd.nameBg  : t.nameBg;
+  var color2 = useCustom && fd.nameBg2 ? fd.nameBg2 : '';
+
+  if (color2) {
+    /* Gradient : on stocke la valeur dans --name-bg directement sous forme de gradient */
+    w.style.setProperty('--name-bg', 'linear-gradient(90deg, ' + color1 + ', ' + color2 + ')');
+  } else {
+    w.style.setProperty('--name-bg', color1);
+  }
+
   w.style.setProperty('--name-text', useCustom && fd.nameText ? fd.nameText : t.nameText);
   root.style.setProperty('--bubble-bg',   t.bubbleBg);
   root.style.setProperty('--bubble-bg-2', t.bubbleBg2);
@@ -291,7 +300,6 @@ function removeOldestIfNeeded(feed){
     var old = feed.firstElementChild;
     if(!old) break;
     old.classList.add('removing');
-    /* Durée synchro avec l'animation CSS la plus longue (0.8s vertical) */
     setTimeout(function(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }.bind(null, old), 850);
     break;
   }
