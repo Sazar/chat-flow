@@ -144,16 +144,49 @@ function highlightMentionText(html){
 function trimReplyText(text){
   return String(text || '').replace(/\s+/g,' ').trim().slice(0, 110);
 }
+
+/**
+ * Détecte les métadonnées de reply Twitch dans les données SE.
+ * SE peut les livrer sous différentes formes selon la version de l'API.
+ */
 function extractReplyMeta(data){
   if (fd.showReplies === false) return null;
-  var parentUser = data.replyParentDisplayName || data.replyParentUserDisplayName || data.replyParentUserLogin || data.replyParentUserName || data.replyParentName || '';
-  var parentText = data.replyParentMessageBody || data.replyParentMsgBody || data.replyParentMessage || data.replyParentText || '';
-  if (!parentUser && !parentText) return null;
-  return { user: parentUser || 'message', text: trimReplyText(parentText) };
+
+  // Forme 1 : objet imbriqué data.reply (EventSub)
+  var r = data.reply || (data.message && data.message.reply) || null;
+  if (r) {
+    var u = r.parentDisplayName || r.parentUserDisplayName || r.parentUserLogin || r.parentUserName || r.parentName || '';
+    var t = r.parentMessageBody || r.parentMsgBody || r.parentMessage || r.parentText || r.body || r.text || '';
+    if (u || t) return { user: u || '?', text: trimReplyText(t) };
+  }
+
+  // Forme 2 : champs plats (SE legacy)
+  var flatUser =
+    data.replyParentDisplayName ||
+    data.replyParentUserDisplayName ||
+    data.replyParentUserLogin ||
+    data.replyParentUserName ||
+    data.replyParentName ||
+    data['reply-parent-display-name'] ||
+    data['reply-parent-user-login'] || '';
+  var flatText =
+    data.replyParentMessageBody ||
+    data.replyParentMsgBody ||
+    data.replyParentMessage ||
+    data.replyParentText ||
+    data['reply-parent-msg-body'] || '';
+
+  if (flatUser || flatText) return { user: flatUser || '?', text: trimReplyText(flatText) };
+
+  return null;
 }
+
 function buildReplyHtml(reply){
   if (!reply) return '';
-  return '<div class="reply-ref"><div class="reply-ref-body"><div class="reply-ref-top">↩ En réponse à <span class="reply-ref-user">'+esc(reply.user)+'</span></div><div class="reply-ref-text">'+esc(reply.text || '')+'</div></div></div>';
+  return '<div class="reply-ref"><div class="reply-ref-body">'+
+    '<div class="reply-ref-top">↩ En réponse à <span class="reply-ref-user">'+esc(reply.user)+'</span></div>'+
+    '<div class="reply-ref-text">'+esc(reply.text || '')+'</div>'+
+    '</div></div>';
 }
 
 function renderText(data, isTest, applyMentionHighlight){
@@ -265,7 +298,7 @@ function testSequence(){
     {type:'chat',name:'HS_Hero',text:"I'm dying Kappa LUL",badges:TB,twitchColor:'#FF4500'},
     {type:'event',name:'ApexAce',kind:'SUB',desc:"s'abonne pour le 1er mois !"},
     {type:'chat',name:'Viewer42',text:'@streamer trop fort !',badges:[],twitchColor:'#9147ff'},
-    {type:'chat',name:'NightOwl',text:'C\'est tellement vrai lol',reply:{user:'HS_Hero',text:"I'm dying Kappa LUL"},badges:TB,twitchColor:'#a855f7'},
+    {type:'chat',name:'NightOwl',text:"C'est tellement vrai lol",reply:{user:'HS_Hero',text:"I'm dying Kappa LUL"},badges:TB,twitchColor:'#a855f7'},
     {type:'event',name:'PrimeGuy',kind:'SUB_PRIME',desc:"s'abonne avec Prime pour le 1er mois !"},
     {type:'event',name:'NightOwl',kind:'RESUB_T2',desc:'se réabonne pour le 6ème mois !',message:'Toujours là PogChamp'},
     {type:'event',name:'LegendPro',kind:'SUB_T3',desc:"s'abonne pour le 1er mois !",message:'Le meilleur stream Kappa'},
@@ -273,7 +306,11 @@ function testSequence(){
     {type:'chat',name:'RocketRacer',text:'So close! BibleThump',badges:TB,twitchColor:'#1E90FF'},
     {type:'event',name:'PixelPirate',kind:'FOLLOW',desc:'vient de follow la chaîne !'}
   ];
-  seq.forEach(function(it,i){ setTimeout(function(){ addItem({type:it.type,name:it.name,kind:it.kind||'',desc:it.desc||'',message:it.message||'',reply:it.reply||null,color:resolveNameColor(it.twitchColor||''),alt:i%2===1,data:{text:it.text||''},badges:it.badges||[],isTest:true}); },i*900); });
+  seq.forEach(function(it,i){
+    setTimeout(function(){
+      addItem({type:it.type,name:it.name,kind:it.kind||'',desc:it.desc||'',message:it.message||'',reply:it.reply||null,color:resolveNameColor(it.twitchColor||''),alt:i%2===1,data:{text:it.text||''},badges:it.badges||[],isTest:true});
+    },i*900);
+  });
 }
 
 window.addEventListener('onWidgetLoad',function(obj){

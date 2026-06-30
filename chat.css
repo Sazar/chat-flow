@@ -35,6 +35,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 #feed::-webkit-scrollbar{ display:none; }
 #feed{ scrollbar-width:none; }
 
+/* ---- ITEM chat ---- */
 .item{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
@@ -43,13 +44,21 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   transition: opacity .28s ease, transform .28s ease, max-height .28s ease, margin .28s ease;
   max-height:400px;
 }
+/* Sortie : miroir exact de l'entrée */
 .item.removing{
-  opacity:0; transform:translateY(-12px) scale(.96);
-  max-height:0; margin:0; pointer-events:none;
+  opacity:0;
+  transform:translateY(-8px) scale(.98);
+  max-height:0;
+  margin:0;
+  pointer-events:none;
 }
 .item:not(.event){ animation: in-chat .3s cubic-bezier(.2,.9,.2,1) both; }
-@keyframes in-chat{ from{ opacity:0; transform:translateY(8px) scale(.98); } to{ opacity:1; transform:translateY(0) scale(1); } }
+@keyframes in-chat{
+  from{ opacity:0; transform:translateY(8px) scale(.98); }
+  to{   opacity:1; transform:translateY(0) scale(1); }
+}
 
+/* ---- ITEM event ---- */
 .item.event{
   width:fit-content; max-width:100%;
   display:flex; flex-direction:column; align-items:flex-start;
@@ -76,6 +85,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 @keyframes ev-stamp{ 0%{opacity:0;transform:scale(1.18);} 70%{opacity:1;transform:scale(.94);} 100%{opacity:1;transform:scale(1);} }
 @keyframes ev-wave{ 0%{opacity:0;transform:translateY(14px) skewY(5deg);} 55%{opacity:1;transform:translateY(-4px) skewY(-3deg);} 100%{opacity:1;transform:translateY(0) skewY(0);} }
 
+/* ---- TOPLINE chat ---- */
 .item .topline{
   display:inline-flex; align-items:center; gap:6px;
   background:var(--name-bg); color:var(--name-text);
@@ -86,6 +96,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 .item .badges{ display:inline-flex; align-items:center; gap:3px; }
 .item .badge{ width:14px; height:14px; display:inline-block; flex:0 0 auto; }
 
+/* ---- BULLE chat ---- */
 .item .bubble{
   margin-top:-8px; margin-left:10px;
   background:var(--bubble-bg); color:var(--bubble-text);
@@ -100,59 +111,36 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   vertical-align:middle !important; margin:-2px 1px !important; display:inline-block !important;
 }
 
-.item.reply .bubble{
-  padding-top:12px;
-}
+/* ---- REPLY Style A ---- */
+.item.reply .bubble{ padding-top:12px; }
 .reply-ref{
-  display:flex;
-  align-items:flex-start;
-  gap:8px;
-  margin:0 0 8px 0;
-  opacity:.92;
+  display:flex; align-items:flex-start; gap:8px;
+  margin:0 0 8px 0; opacity:.92;
 }
 .reply-ref::before{
-  content:'';
-  width:2px;
-  min-width:2px;
-  align-self:stretch;
-  border-radius:999px;
-  background:var(--name-bg);
+  content:''; width:2px; min-width:2px; align-self:stretch;
+  border-radius:999px; background:var(--name-bg);
 }
-.reply-ref-body{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-}
+.reply-ref-body{ min-width:0; display:flex; flex-direction:column; gap:2px; }
 .reply-ref-top{
-  font-size:11px;
-  font-weight:800;
-  letter-spacing:.02em;
+  font-size:11px; font-weight:800; letter-spacing:.02em;
   color:color-mix(in srgb, var(--bubble-text) 78%, transparent);
 }
-.reply-ref-user{
-  color:var(--name-bg);
-}
+.reply-ref-user{ color:var(--name-bg); }
 .reply-ref-text{
-  font-size:12px;
-  line-height:1.25;
-  font-style:italic;
+  font-size:12px; line-height:1.25; font-style:italic;
   color:color-mix(in srgb, var(--bubble-text) 70%, transparent);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:100%;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
 }
 
+/* ---- MENTION HIGHLIGHT ---- */
 .item.mention .bubble{
   border:2px solid var(--highlight-color);
   box-shadow:var(--shadow), 0 0 10px 2px color-mix(in srgb, var(--highlight-color) 40%, transparent);
 }
-.mention-tag{
-  color:var(--highlight-color);
-  font-weight:700;
-}
+.mention-tag{ color:var(--highlight-color); font-weight:700; }
 
+/* ---- TOPLINE event ---- */
 .item.event .topline{
   display:inline-flex; align-items:center; flex-wrap:wrap; gap:9px;
   background:var(--name-bg); color:var(--name-text);
@@ -166,12 +154,13 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 .item.event .ev-name{ font-weight:900; flex:0 0 auto; }
 .item.event .ev-desc{ font-weight:500; opacity:0.88; flex:1 1 auto; word-break:break-word; }
 
+/* ================================================================
+   PILULES
+================================================================ */
 .item.event .ev-kind-wrap{
-  flex:0 0 auto;
-  margin-left:4px;
-  contain:paint;
-  isolation:isolate;
+  flex:0 0 auto; margin-left:4px;
   border-radius:999px;
+  /* PAS de contain/isolation ici — évite le stacking context qui propage le flou */
 }
 .item.event .ev-kind{
   position:relative;
@@ -180,9 +169,9 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   padding:5px 10px; border-radius:999px; line-height:1;
   white-space:nowrap;
   background:rgba(0,0,0,.22); color:inherit;
-  overflow:visible;
 }
 
+/* T2 — pulse violet */
 .item.event .ev-kind.tier2{
   background:#7c3aed; color:#ffffff;
   animation: pulse-t2 2.2s ease-in-out infinite;
@@ -192,36 +181,30 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   50%{ box-shadow:0 0 14px 4px rgba(167,109,255,.85),0 0 28px 8px rgba(124,58,237,.4); }
 }
 
+/* T3 — éclat doré, ZÉRO transform animé, opacity uniquement → pas de flou */
 .item.event .ev-kind.tier3{
   background:linear-gradient(135deg,#d97706,#f59e0b);
   color:#1a0a00;
-  overflow:hidden;
+  box-shadow: 0 0 0 1.5px rgba(253,230,138,.6), 0 0 8px 1px rgba(245,158,11,.3);
 }
+/* Sheen : pseudo positionné en absolu, animé en opacity SEULEMENT */
 .item.event .ev-kind.tier3::before{
-  content:'';
-  position:absolute;
-  inset:-2px;
-  border-radius:999px;
-  background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.0) 32%, rgba(255,245,200,.75) 50%, rgba(255,255,255,.0) 68%, transparent 100%);
-  transform:translateX(-140%);
-  animation:t3-sheen 2.8s ease-in-out infinite;
-  pointer-events:none;
-}
-.item.event .ev-kind.tier3 > *{ position:relative; z-index:1; }
-@keyframes t3-sheen{
-  0%,15%{ transform:translateX(-140%); }
-  45%,55%{ transform:translateX(140%); }
-  100%{ transform:translateX(140%); }
-}
-.item.event .ev-kind.tier3::after{
   content:'';
   position:absolute;
   inset:0;
   border-radius:999px;
-  box-shadow: inset 0 0 0 1px rgba(255,244,180,.55), 0 0 0 1px rgba(217,119,6,.22);
+  background:linear-gradient(105deg, transparent 20%, rgba(255,253,220,.7) 50%, transparent 80%);
+  opacity:0;
+  animation: t3-sheen 2.8s ease-in-out infinite;
   pointer-events:none;
 }
+@keyframes t3-sheen{
+  0%,20% { opacity:0; }
+  40%    { opacity:1; }
+  60%,100%{ opacity:0; }
+}
 
+/* Prime — bleu fixe */
 .item.event .ev-kind.prime{
   background:linear-gradient(135deg,#0070e0,#00b4ff);
   color:#ffffff;
