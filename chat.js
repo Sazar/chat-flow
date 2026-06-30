@@ -5,7 +5,6 @@ let widgetLoaded = false;
 let eventQueue = [];
 let eventQueueBusy = false;
 
-// Largeur de base du #widget en CSS (taille interne fixe)
 var WIDGET_BASE_WIDTH = 600;
 
 function esc(s){
@@ -34,47 +33,37 @@ function isHorizontalLayout(){
 }
 
 /**
- * Calcule la largeur correcte du feed horizontal.
+ * En mode horizontal, le feed est position:fixed dans l'iframe SE (600px CSS).
+ * SE applique transform:scale en dehors de l'iframe — donc le feed doit faire
+ * exactement WIDGET_BASE_WIDTH (600px CSS) pour couvrir toute la zone SE.
  *
- * StreamElements charge le widget dans une iframe de 600px (WIDGET_BASE_WIDTH).
- * La zone configurée dans SE (ex: 1920px) est rendue via transform:scale sur
- * le conteneur SE — mais l'iframe elle-même reste à 600px CSS.
- * Un élément position:fixed vit dans ce viewport de 600px.
+ * widgetWidth (field) représente la largeur réelle de la zone configurée dans SE.
+ * scale SE implicite = widgetWidth / WIDGET_BASE_WIDTH
+ * Pour que le feed couvre la zone : feedWidth_CSS = widgetWidth / scale_SE = WIDGET_BASE_WIDTH
  *
- * Pour couvrir toute la zone SE, on utilise le champ widgetWidth (largeur
- * réelle configurée dans SE) et on le convertit en px CSS fixed :
- *   widthCSS = widgetWidth * (600 / widgetWidth) = 600... non.
+ * => On force toujours 100vw (= 600px dans l'iframe SE).
+ * => En preview locale (window.innerWidth > WIDGET_BASE_WIDTH), on applique widgetWidth directement.
  *
- * La vraie formule : le scale SE = widgetWidth / WIDGET_BASE_WIDTH.
- * Un élément fixed de X px CSS sera affiché à X * scale px à l'écran.
- * Pour qu'il fasse widgetWidth px à l'écran : X = widgetWidth / scale = WIDGET_BASE_WIDTH.
- * Mais l'iframe viewort fait 600px, donc width:100% ou 600px suffit... sauf
- * que SE clip l'iframe. La solution : width = widgetWidth / scale en px fixed,
- * où scale = widgetWidth / WIDGET_BASE_WIDTH.
- * => width = widgetWidth / (widgetWidth / 600) = 600px — toujours 600px CSS.
- *
- * CONCLUSION : en mode SE, le feed fixed doit faire exactement WIDGET_BASE_WIDTH px
- * pour couvrir toute la zone. On force donc 100vw qui = 600px dans l'iframe SE.
- * Pour la preview locale (sans scale SE), widgetWidth permet d'élargir via
- * un fallback sur window.innerWidth.
+ * Mais le vrai problème n'est PAS la largeur du feed — c'est que les items
+ * doivent s'étirer (flex:1 1 0) pour remplir toute la ligne. C'est géré en CSS.
  */
 function fixHorizontalFeedWidth(){
   var feed = document.getElementById('feed');
   if (!feed || !feed.classList.contains('layout-horizontal')) return;
 
-  // Dans l'iframe SE, window.innerWidth = WIDGET_BASE_WIDTH (600px)
-  // Le scale SE s'applique en dehors de l'iframe — on ne peut pas le lire depuis JS
-  // La seule valeur correcte est 100% du viewport de l'iframe = 100vw
-  // On retire tout style.width inline pour laisser le CSS width:100vw faire son travail
-  feed.style.width = '';
+  var root = document.documentElement;
 
-  // Pour la preview hors SE (test local) où window.innerWidth peut être plus grand,
-  // on utilise widgetWidth si fourni pour forcer la largeur attendue
+  // Dans l'iframe SE : window.innerWidth = 600px = WIDGET_BASE_WIDTH
+  // 100vw couvre exactement la zone SE (SE applique le scale en dehors)
+  var cssWidth = '100vw';
+
+  // En preview locale hors SE (window.innerWidth > WIDGET_BASE_WIDTH)
   var targetWidth = parseInt(fd.widgetWidth, 10);
-  if (!isNaN(targetWidth) && targetWidth > 0 && window.innerWidth > WIDGET_BASE_WIDTH) {
-    // On est hors iframe SE (preview locale) : appliquer la largeur cible directement
-    feed.style.width = targetWidth + 'px';
+  if (!isNaN(targetWidth) && targetWidth > 0 && window.innerWidth > WIDGET_BASE_WIDTH + 10) {
+    cssWidth = targetWidth + 'px';
   }
+
+  root.style.setProperty('--h-feed-width', cssWidth);
 }
 
 function applyThemeVars(){
@@ -108,6 +97,7 @@ function applyThemeVars(){
     } else {
       feed.classList.remove('layout-horizontal');
       feed.style.width = '';
+      document.documentElement.style.removeProperty('--h-feed-width');
     }
   }
 }

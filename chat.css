@@ -10,6 +10,7 @@
   --bubble-bg-2:#242633;
   --bubble-text:#f6fbff;
   --highlight-color:#f59e0b;
+  --h-feed-width:100vw;
 }
 
 html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transparent; font-family:var(--font); }
@@ -44,9 +45,8 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    FEED — MODE HORIZONTAL
-   position:fixed sort du clip du #widget.
-   La largeur réelle est injectée via JS (--h-feed-width) pour
-   correspondre exactement à la zone configurée dans StreamElements.
+   Les items s'étirent pour remplir toute la largeur (justify-content:stretch).
+   Pas de scroll horizontal — tout rentre sur une seule ligne.
 ================================================================ */
 #feed.layout-horizontal{
   position:fixed;
@@ -57,8 +57,9 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   justify-content:flex-start;
   align-items:flex-end;
   flex-wrap:nowrap;
-  overflow-x:auto; overflow-y:visible;
-  gap:8px; padding:12px 18px;
+  overflow:visible;
+  gap:6px;
+  padding:12px 10px;
   box-sizing:border-box;
 }
 
@@ -77,6 +78,16 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
     max-height .32s ease,
     margin-bottom .32s ease;
   max-height:400px;
+}
+
+/* ================================================================
+   ITEM — MODE HORIZONTAL  (stretch sur toute la ligne)
+================================================================ */
+#feed.layout-horizontal .item{
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
+  width: auto;
 }
 
 /* ================================================================
@@ -102,16 +113,16 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 #feed.layout-horizontal .item.removing{
   transform:translateX(-24px) !important;
   opacity:0;
-  max-width:0 !important;
-  width:0 !important;
+  flex:0 0 0 !important;
   min-width:0 !important;
+  width:0 !important;
   padding:0 !important;
   margin:0 !important;
   overflow:hidden !important;
   transition:
     opacity .28s ease,
     transform .28s ease,
-    max-width .28s ease,
+    flex .28s ease,
     width .28s ease,
     margin .28s ease !important;
 }
@@ -139,8 +150,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 #feed.layout-horizontal .item:not(.event){
   flex-direction:row !important;
   align-items:stretch !important;
-  width:auto;
-  max-width:none;
   gap:0;
   filter:drop-shadow(0 4px 14px rgba(0,0,0,.28));
   overflow:visible;
@@ -149,7 +158,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 /* Pseudo — même arrondi que la bubble */
 #feed.layout-horizontal .item:not(.event) .topline{
   flex-shrink:0;
-  border-radius:9px;      /* identique à la bubble */
+  border-radius:9px;
   font-size:13px;
   padding:8px 13px;
   white-space:nowrap;
@@ -162,9 +171,10 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   box-shadow:none;
 }
 
-/* Bubble texte */
+/* Bubble texte — s'étire pour prendre le reste */
 #feed.layout-horizontal .item:not(.event) .bubble{
   flex:1 1 auto;
+  min-width:0;
   margin:0 !important;
   border-radius:9px;
   padding:8px 14px 8px 22px;
@@ -173,7 +183,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:280px;
+  max-width:none;
   display:flex;
   align-items:center;
   position:relative;
@@ -188,8 +198,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   flex-direction:row !important;
   align-items:stretch !important;
   flex-shrink:0;
-  width:auto;
-  max-width:none;
   gap:0;
   filter:none;
   overflow:visible;
@@ -197,7 +205,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 #feed.layout-horizontal .item.event .topline{
   flex-shrink:0;
-  border-radius:9px;      /* identique à la bubble */
+  border-radius:9px;
   font-size:13px;
   padding:8px 14px;
   gap:7px;
@@ -214,6 +222,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 #feed.layout-horizontal .item.event .bubble{
   flex:0 1 auto;
+  min-width:0;
   margin:0 !important;
   border-radius:9px;
   padding:8px 14px 8px 22px;
