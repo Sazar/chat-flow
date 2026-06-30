@@ -1,4 +1,13 @@
 {
+  "chatLayout": {
+    "type": "dropdown",
+    "label": "Disposition des messages",
+    "value": "vertical",
+    "options": {
+      "vertical": "Vertical — messages empilés (défaut)",
+      "horizontal": "Horizontal — messages côte à côte"
+    }
+  },
   "theme": {
     "type": "dropdown",
     "label": "Theme",

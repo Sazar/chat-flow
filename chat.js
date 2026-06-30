@@ -46,6 +46,17 @@ function applyThemeVars(){
   root.style.setProperty('--bubble-bg',   t.bubbleBg);
   root.style.setProperty('--bubble-bg-2', t.bubbleBg2);
   root.style.setProperty('--bubble-text', t.bubbleText);
+
+  // Disposition horizontale ou verticale
+  var feed = document.getElementById('feed');
+  if (feed) {
+    var layout = String(fd.chatLayout || 'vertical').toLowerCase();
+    if (layout === 'horizontal') {
+      feed.classList.add('layout-horizontal');
+    } else {
+      feed.classList.remove('layout-horizontal');
+    }
+  }
 }
 
 function badgeIcons(badges){
@@ -249,7 +260,6 @@ function createEventEl(name,kind,desc,message,isTest){
   if(showKind){
     var wrap=document.createElement('span');
     var tc=kindTierClass(kind);
-    // t3-wrap sur le parent pour porter l'animation dorée sans toucher au texte
     wrap.className='ev-kind-wrap' + (tc==='tier3' ? ' t3-wrap' : '');
     var kindSpan=document.createElement('span');
     kindSpan.className='ev-kind'+(tc?' '+tc:'');
