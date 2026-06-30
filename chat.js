@@ -25,6 +25,11 @@ function getEventQueueDelay(){
   return isNaN(n) || n < 0 ? 0 : n;
 }
 
+function isHorizontalLayout(){
+  var feed = document.getElementById('feed');
+  return feed && feed.classList.contains('layout-horizontal');
+}
+
 function applyThemeVars(){
   var w = document.getElementById('widget');
   var theme = String(fd.theme || 'monster').toLowerCase();
@@ -164,6 +169,8 @@ function trimReplyText(text){
 }
 
 function extractReplyMeta(data){
+  // En mode horizontal, on désactive toujours les replies
+  if (isHorizontalLayout()) return null;
   if (fd.showReplies === false) return null;
   var tags = data.tags || (data.message && data.message.tags) || null;
   if (tags && typeof tags === 'object') {
@@ -295,7 +302,8 @@ function addItem(opts){
   } else {
     var rawText = String((opts.data&&opts.data.text)||opts.text||'');
     var doMention = shouldHighlightMessage(rawText);
-    var reply = opts.reply || null;
+    // En mode horizontal, les replies sont toujours désactivés
+    var reply = isHorizontalLayout() ? null : (opts.reply || null);
     el=document.createElement('div');
     el.className='item'+(opts.alt?' alt':'')+(doMention?' mention':'')+(reply?' reply':'');
     var body=renderText(opts.data||{text:opts.text||''},opts.isTest||false,doMention);

@@ -59,9 +59,8 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    ITEM — BASE (vertical)
-   L'ombre est portée par .item via filter:drop-shadow,
-   ce qui suit les border-radius des enfants sans artefact anguleux.
-   overflow:visible nécessaire pour que le drop-shadow soit visible.
+   Ombre portée par filter:drop-shadow sur .item,
+   suit les border-radius des enfants sans artefact anguleux.
 ================================================================ */
 .item{
   width:fit-content; max-width:100%;
@@ -79,11 +78,6 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    SORTIE VERTICALE — texte glisse vers le haut + fade
-   On anime le contenu interne (.topline + .bubble) via un wrapper,
-   mais comme on n'a pas de wrapper interne, on anime directement
-   l'item : translateY vers le haut + opacity 0.
-   max-height → 0 pour que les items du dessous remontent.
-   overflow:hidden pendant la sortie pour clipper le glissement.
 ================================================================ */
 .item.removing{
   opacity:0;
@@ -136,19 +130,20 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    ITEM CHAT — MODE HORIZONTAL
-   Pilule pseudo se superpose sur la bulle texte (margin-right négatif)
+   Pilule pseudo superposée sur la bulle texte.
+   La bulle garde la même forme qu'en vertical (légèrement arrondie).
 ================================================================ */
 #feed.layout-horizontal .item:not(.event){
   flex-direction:row !important;
   align-items:center !important;
   width:auto;
-  max-width:400px;
+  max-width:420px;
   gap:0;
-  filter:none;     /* drop-shadow individuel sur chaque pilule */
+  filter:drop-shadow(0 4px 14px rgba(0,0,0,.28));
   overflow:visible;
 }
 
-/* Pseudo : pilule totalement arrondie, z-index élevé, dépasse sur la bubble */
+/* Pseudo : pilule totalement arrondie, z-index élevé, se superpose sur la bubble */
 #feed.layout-horizontal .item:not(.event) .topline{
   flex-shrink:0;
   border-radius:999px;
@@ -161,30 +156,31 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   margin-right:-14px;   /* superposition sur la bubble */
   z-index:3;
   position:relative;
-  filter:drop-shadow(0 3px 8px rgba(0,0,0,.32));
   align-self:center;
+  box-shadow:none;
 }
 
-/* Bubble texte : reçoit la superposition, coins entièrement arrondis */
+/* Bubble texte : même forme qu'en vertical, légèrement arrondie */
 #feed.layout-horizontal .item:not(.event) .bubble{
   flex:1 1 auto;
   margin:0 !important;
-  border-radius:999px;
-  padding:7px 14px 7px 22px;   /* padding-left large pour laisser place au pseudo */
+  border-radius:9px;             /* identique au mode vertical */
+  padding:8px 14px 8px 22px;    /* padding-left large pour laisser place au pseudo */
   font-size:13px;
   line-height:1.25;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
   max-width:260px;
-  filter:drop-shadow(0 3px 8px rgba(0,0,0,.22));
   align-self:center;
   position:relative;
   z-index:2;
+  box-shadow:none;
 }
 
 /* ================================================================
    ITEM EVENT — MODE HORIZONTAL
+   Topline collée à la bubble, sans ombre sur les pilules.
 ================================================================ */
 #feed.layout-horizontal .item.event{
   flex-direction:row !important;
@@ -193,11 +189,11 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   width:auto;
   max-width:none;
   gap:0;
-  filter:none;
+  filter:none;       /* pas d'ombre globale sur l'event horizontal */
   overflow:visible;
 }
 
-/* Topline event : pilule autonome arrondie, superposée sur bubble */
+/* Topline event : légèrement arrondie comme en vertical, collée à la bubble, sans ombre */
 #feed.layout-horizontal .item.event .topline{
   flex-shrink:0;
   border-radius:14px;
@@ -208,15 +204,16 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   white-space:nowrap;
   position:relative;
   z-index:3;
-  margin-right:-14px;
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.32));
+  margin-right:-14px;   /* superposition sur la bubble */
+  box-shadow:none;
+  filter:none;
 }
 
-/* Bubble message event horizontal */
+/* Bubble message event horizontal : sans ombre, collée à la topline */
 #feed.layout-horizontal .item.event .bubble{
   flex:0 1 auto;
   margin:0 !important;
-  border-radius:10px;
+  border-radius:9px;
   padding:8px 14px 8px 22px;
   font-size:13px;
   line-height:1.25;
@@ -224,10 +221,11 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   overflow:hidden;
   text-overflow:ellipsis;
   max-width:200px;
-  filter:drop-shadow(0 3px 8px rgba(0,0,0,.22));
   align-self:center;
   position:relative;
   z-index:2;
+  box-shadow:none;
+  filter:none;
 }
 
 /* ---- ITEM event (vertical) ---- */
@@ -259,7 +257,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 
 /* ================================================================
    TOPLINE chat (vertical)
-   PAS de box-shadow ici — l'ombre vient du filter:drop-shadow du .item
+   PAS de box-shadow — ombre via filter:drop-shadow du .item
 ================================================================ */
 .item .topline{
   display:inline-flex; align-items:center; gap:6px;
