@@ -152,14 +152,25 @@ function trimReplyText(text){
   return String(text || '').replace(/\s+/g,' ').trim().slice(0, 110);
 }
 
+/**
+ * Extrait les métadonnées de reply depuis toutes les sources possibles :
+ * 1. data.tags (tags IRC Twitch bruts via SE)
+ * 2. champs plats camelCase (SE legacy)
+ * 3. champs kebab-case (IRC brut)
+ * 4. objet data.reply imbriqué (EventSub)
+ */
 function extractReplyMeta(data){
   if (fd.showReplies === false) return null;
-  var r = data.reply || (data.message && data.message.reply) || null;
-  if (r) {
-    var u = r.parentDisplayName || r.parentUserDisplayName || r.parentUserLogin || r.parentUserName || r.parentName || '';
-    var t = r.parentMessageBody || r.parentMsgBody || r.parentMessage || r.parentText || r.body || r.text || '';
-    if (u || t) return { user: u || '?', text: trimReplyText(t) };
+
+  // --- Source 1 : data.tags (clé la plus fiable sur le vrai stream SE) ---
+  var tags = data.tags || (data.message && data.message.tags) || null;
+  if (tags && typeof tags === 'object') {
+    var tu = tags['reply-parent-display-name'] || tags['reply-parent-user-login'] || tags['replyParentDisplayName'] || tags['replyParentUserLogin'] || '';
+    var tt = tags['reply-parent-msg-body'] || tags['replyParentMsgBody'] || tags['reply-parent-message'] || '';
+    if (tu || tt) return { user: tu || '?', text: trimReplyText(tt) };
   }
+
+  // --- Source 2 : champs plats camelCase / kebab-case directement sur data ---
   var flatUser =
     data.replyParentDisplayName ||
     data.replyParentUserDisplayName ||
@@ -175,6 +186,15 @@ function extractReplyMeta(data){
     data.replyParentText ||
     data['reply-parent-msg-body'] || '';
   if (flatUser || flatText) return { user: flatUser || '?', text: trimReplyText(flatText) };
+
+  // --- Source 3 : objet imbriqué data.reply (EventSub) ---
+  var r = data.reply || (data.message && data.message.reply) || null;
+  if (r) {
+    var u = r.parentDisplayName || r.parentUserDisplayName || r.parentUserLogin || r.parentUserName || r.parentName || '';
+    var t = r.parentMessageBody || r.parentMsgBody || r.parentMessage || r.parentText || r.body || r.text || '';
+    if (u || t) return { user: u || '?', text: trimReplyText(t) };
+  }
+
   return null;
 }
 

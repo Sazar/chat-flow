@@ -44,7 +44,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   transition: opacity .28s ease, transform .28s ease, max-height .28s ease, margin .28s ease;
   max-height:400px;
 }
-/* Sortie : miroir exact de l'entrée */
+/* Sortie vers le haut */
 .item.removing{
   opacity:0;
   transform:translateY(-8px) scale(.98);
@@ -111,7 +111,7 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   vertical-align:middle !important; margin:-2px 1px !important; display:inline-block !important;
 }
 
-/* ---- REPLY Style A ---- */
+/* ---- REPLY Style ---- */
 .item.reply .bubble{ padding-top:12px; }
 .reply-ref{
   display:flex; align-items:flex-start; gap:8px;
@@ -160,10 +160,11 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
 .item.event .ev-kind-wrap{
   flex:0 0 auto; margin-left:4px;
   border-radius:999px;
-  /* PAS de contain/isolation ici — évite le stacking context qui propage le flou */
 }
 .item.event .ev-kind{
+  /* position:relative + overflow:hidden = obligatoire pour le sheen ::before */
   position:relative;
+  overflow:hidden;
   display:inline-block;
   font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
   padding:5px 10px; border-radius:999px; line-height:1;
@@ -181,27 +182,54 @@ html,body{ margin:0; width:100%; height:100%; overflow:hidden; background:transp
   50%{ box-shadow:0 0 14px 4px rgba(167,109,255,.85),0 0 28px 8px rgba(124,58,237,.4); }
 }
 
-/* T3 — éclat doré, ZÉRO transform animé, opacity uniquement → pas de flou */
+/* ================================================================
+   T3 — SHEEN DORÉ PREMIUM
+   Principe : ZÉRO transform animé sur le texte → pas de flou.
+   Seul le pseudo-élément ::before (sheen) anime en opacity + translateX.
+   Le texte reste parfaitement net.
+================================================================ */
 .item.event .ev-kind.tier3{
-  background:linear-gradient(135deg,#d97706,#f59e0b);
+  background:linear-gradient(135deg, #b45309 0%, #d97706 40%, #fbbf24 70%, #f59e0b 100%);
   color:#1a0a00;
-  box-shadow: 0 0 0 1.5px rgba(253,230,138,.6), 0 0 8px 1px rgba(245,158,11,.3);
+  box-shadow:
+    0 0 0 1.5px rgba(253,230,138,.7),
+    0 0 10px 2px rgba(245,158,11,.45),
+    0 2px 4px rgba(0,0,0,.3);
+  /* Pas d'animation sur l'élément lui-même : texte net */
 }
-/* Sheen : pseudo positionné en absolu, animé en opacity SEULEMENT */
+/* Halo doré pulsant autour de la pilule — opacity uniquement, aucun transform */
+.item.event .ev-kind.tier3::after{
+  content:'';
+  position:absolute;
+  inset:-3px;
+  border-radius:999px;
+  background:transparent;
+  box-shadow: 0 0 0 1.5px rgba(253,230,138,.6);
+  animation: t3-halo 2.4s ease-in-out infinite;
+  pointer-events:none;
+  /* will-change:opacity évite le flou subpixel */
+  will-change:opacity;
+}
+@keyframes t3-halo{
+  0%,100%{ opacity:.4; }
+  50%{ opacity:1; }
+}
+/* Sheen lumineux qui traverse — translateX sur un pseudo séparé */
 .item.event .ev-kind.tier3::before{
   content:'';
   position:absolute;
-  inset:0;
-  border-radius:999px;
-  background:linear-gradient(105deg, transparent 20%, rgba(255,253,220,.7) 50%, transparent 80%);
-  opacity:0;
+  top:0; left:-60%;
+  width:50%; height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,253,220,.75), transparent);
   animation: t3-sheen 2.8s ease-in-out infinite;
   pointer-events:none;
+  will-change:transform, opacity;
 }
 @keyframes t3-sheen{
-  0%,20% { opacity:0; }
-  40%    { opacity:1; }
-  60%,100%{ opacity:0; }
+  0%,15% { transform:translateX(0);   opacity:0; }
+  25%    { opacity:1; }
+  55%    { transform:translateX(320%); opacity:0; }
+  100%   { transform:translateX(320%); opacity:0; }
 }
 
 /* Prime — bleu fixe */
