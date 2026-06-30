@@ -26,6 +26,14 @@
       "wave": "Wave — flottement doux"
     }
   },
+  "eventQueueDelay": {
+    "type": "slider",
+    "label": "Délai entre les events (ms)",
+    "value": 800,
+    "min": 0,
+    "max": 5000,
+    "step": 100
+  },
   "useNameBarColor": {
     "type": "checkbox",
     "label": "Use custom name bar color",

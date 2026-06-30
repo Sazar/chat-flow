@@ -2,6 +2,8 @@ let fd = {};
 let maxItems = 11;
 let thirdPartyEmotes = {};
 let widgetLoaded = false;
+let eventQueue = [];
+let eventQueueBusy = false;
 
 function esc(s){
   return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -16,6 +18,11 @@ function getEventAnimClass(){
   var anim = String(fd.eventAnim || 'slide').toLowerCase();
   var valid = ['slide','pop','bounce','flip','glow','zoomleft','swing','stamp','wave'];
   return 'anim-' + (valid.includes(anim) ? anim : 'slide');
+}
+
+function getEventQueueDelay(){
+  var n = parseInt(fd.eventQueueDelay, 10);
+  return isNaN(n) || n < 0 ? 0 : n;
 }
 
 function applyThemeVars(){
@@ -145,22 +152,14 @@ function trimReplyText(text){
   return String(text || '').replace(/\s+/g,' ').trim().slice(0, 110);
 }
 
-/**
- * Détecte les métadonnées de reply Twitch dans les données SE.
- * SE peut les livrer sous différentes formes selon la version de l'API.
- */
 function extractReplyMeta(data){
   if (fd.showReplies === false) return null;
-
-  // Forme 1 : objet imbriqué data.reply (EventSub)
   var r = data.reply || (data.message && data.message.reply) || null;
   if (r) {
     var u = r.parentDisplayName || r.parentUserDisplayName || r.parentUserLogin || r.parentUserName || r.parentName || '';
     var t = r.parentMessageBody || r.parentMsgBody || r.parentMessage || r.parentText || r.body || r.text || '';
     if (u || t) return { user: u || '?', text: trimReplyText(t) };
   }
-
-  // Forme 2 : champs plats (SE legacy)
   var flatUser =
     data.replyParentDisplayName ||
     data.replyParentUserDisplayName ||
@@ -175,9 +174,7 @@ function extractReplyMeta(data){
     data.replyParentMessage ||
     data.replyParentText ||
     data['reply-parent-msg-body'] || '';
-
   if (flatUser || flatText) return { user: flatUser || '?', text: trimReplyText(flatText) };
-
   return null;
 }
 
@@ -292,6 +289,27 @@ function addItem(opts){
   el.scrollIntoView({behavior:'smooth',block:'end'});
 }
 
+function enqueueEvent(opts){
+  var delay = getEventQueueDelay();
+  if (delay <= 0) {
+    addItem(opts);
+    return;
+  }
+  eventQueue.push(opts);
+  processEventQueue();
+}
+
+function processEventQueue(){
+  if (eventQueueBusy || !eventQueue.length) return;
+  eventQueueBusy = true;
+  var next = eventQueue.shift();
+  addItem(next);
+  setTimeout(function(){
+    eventQueueBusy = false;
+    processEventQueue();
+  }, getEventQueueDelay());
+}
+
 function testSequence(){
   var TB=[{url:'https://static-cdn.jtvnw.net/badges/v1/a3259b9d-5cfb-420a-ab9c-f8579d35c883/1'},{url:'https://static-cdn.jtvnw.net/badges/v1/963b2afc-d913-41ab-b07d-67f74854c710/1'}];
   var seq=[
@@ -308,8 +326,9 @@ function testSequence(){
   ];
   seq.forEach(function(it,i){
     setTimeout(function(){
-      addItem({type:it.type,name:it.name,kind:it.kind||'',desc:it.desc||'',message:it.message||'',reply:it.reply||null,color:resolveNameColor(it.twitchColor||''),alt:i%2===1,data:{text:it.text||''},badges:it.badges||[],isTest:true});
-    },i*900);
+      var payload={type:it.type,name:it.name,kind:it.kind||'',desc:it.desc||'',message:it.message||'',reply:it.reply||null,color:resolveNameColor(it.twitchColor||''),alt:i%2===1,data:{text:it.text||''},badges:it.badges||[],isTest:true};
+      if(it.type==='event') enqueueEvent(payload); else addItem(payload);
+    },i*300);
   });
 }
 
@@ -332,20 +351,20 @@ window.addEventListener('onEventReceived',function(obj){
     return;
   }
   var evName=event.name||data.displayName||data.name||'Someone';
-  if(listener==='follower-latest') addItem({type:'event',name:evName,kind:'FOLLOW',desc:'vient de follow la chaîne !'});
+  if(listener==='follower-latest') enqueueEvent({type:'event',name:evName,kind:'FOLLOW',desc:'vient de follow la chaîne !'});
   if(listener==='subscriber-latest'){
     var isBulk=data.bulkGifted===true, isGifted=data.gifted===true, sender=data.sender||'', tierRaw=data.tier||data.subPlan||'', isPrime=(tierRaw==='Prime'||tierRaw==='prime'||data.prime===true), subMsg=data.message||'';
     var tierSuffix=isPrime?'_PRIME':tierRaw==='3000'?'_T3':tierRaw==='2000'?'_T2':'';
-    if(isBulk){ var qty=data.amount||1; addItem({type:'event',name:sender||evName,kind:'CGIFT',desc:'offre '+qty+' sub'+(qty>1?'s':'')+' à la communauté !'}); }
-    else if(isGifted){ var recipient=data.name||data.displayName||''; addItem({type:'event',name:sender||evName,kind:'GIFT',desc:recipient?'offre un sub gift à '+recipient+' !':'offre un sub gift !'}); }
+    if(isBulk){ var qty=data.amount||1; enqueueEvent({type:'event',name:sender||evName,kind:'CGIFT',desc:'offre '+qty+' sub'+(qty>1?'s':'')+' à la communauté !'}); }
+    else if(isGifted){ var recipient=data.name||data.displayName||''; enqueueEvent({type:'event',name:sender||evName,kind:'GIFT',desc:recipient?'offre un sub gift à '+recipient+' !':'offre un sub gift !'}); }
     else {
       var months=parseInt(data.months||data.streak||data.amount||event.amount||1,10); if(isNaN(months)||months<1) months=1;
       var isResub=months>1, kind=(isResub?'RESUB':'SUB')+tierSuffix;
       var monthStr=isPrime ? (isResub?'se réabonne avec Prime pour le '+months+'ème mois':"s'abonne avec Prime pour le 1er mois") : (isResub?'se réabonne pour le '+months+'ème mois':"s'abonne pour le 1er mois");
-      addItem({type:'event',name:evName,kind:kind,desc:monthStr+' !',message:subMsg});
+      enqueueEvent({type:'event',name:evName,kind:kind,desc:monthStr+' !',message:subMsg});
     }
   }
-  if(listener==='cheer-latest') addItem({type:'event',name:evName,kind:'CHEER',desc:'a envoyé '+(data.amount||event.amount||'')+' bits !'});
-  if(listener==='raid-latest'){ var viewers=data.amount||data.viewers||event.amount||0; addItem({type:'event',name:evName,kind:'RAID',desc:'débarque avec '+viewers+' viewer'+(viewers>1?'s':'')+' !'}); }
-  if(listener==='tip-latest'){ var tipAmount=data.amount||event.amount||'', currency=data.currency||event.currency||'EUR'; addItem({type:'event',name:evName,kind:'TIP',desc:'a fait un don de '+tipAmount+' '+currency+' !',message:data.message||''}); }
+  if(listener==='cheer-latest') enqueueEvent({type:'event',name:evName,kind:'CHEER',desc:'a envoyé '+(data.amount||event.amount||'')+' bits !'});
+  if(listener==='raid-latest'){ var viewers=data.amount||data.viewers||event.amount||0; enqueueEvent({type:'event',name:evName,kind:'RAID',desc:'débarque avec '+viewers+' viewer'+(viewers>1?'s':'')+' !'}); }
+  if(listener==='tip-latest'){ var tipAmount=data.amount||event.amount||'', currency=data.currency||event.currency||'EUR'; enqueueEvent({type:'event',name:evName,kind:'TIP',desc:'a fait un don de '+tipAmount+' '+currency+' !',message:data.message||''}); }
 });
